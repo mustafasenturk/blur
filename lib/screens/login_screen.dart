@@ -1,15 +1,12 @@
-import 'dart:io';
 import 'dart:ui' as ui;
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
-import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
 
 import '../theme/app_colors.dart';
+import 'main_screen.dart';
 import 'registration_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -63,13 +60,6 @@ class _LoginScreenState extends State<LoginScreen>
     super.dispose();
   }
 
-  Future<void> _launchUrl(String urlString) async {
-    final Uri url = Uri.parse(urlString);
-    if (!await launchUrl(url, mode: LaunchMode.inAppWebView)) {
-      throw Exception('Could not launch $url');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     // Set status bar to light (white icons) since video is dark
@@ -119,7 +109,28 @@ class _LoginScreenState extends State<LoginScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Logo removed as requested
+                  // Header Logo & Title
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        'assets/icons/logo_transparent.png',
+                        height: 30,
+                        fit: BoxFit.contain,
+                      ),
+                      const SizedBox(width: 12),
+                      const Text(
+                        'Blur: Anonymous Chat',
+                        style: TextStyle(
+                          fontFamily: 'RobotoSlab',
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
 
                   // Spacer to push Text to center
                   const Spacer(flex: 4),
@@ -167,40 +178,55 @@ class _LoginScreenState extends State<LoginScreen>
                   const Spacer(flex: 3),
                   const SizedBox(height: 48),
 
-                  // Social Login Buttons
+                  // Buttons
                   Column(
                     children: [
-                      _SocialButton(
-                        assetName: 'assets/icons/google_logo.svg',
-                        text: 'Continue with Google',
-                        onTap: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const RegistrationScreen(),
+                      // "Already have an account" Button (Top)
+                      SizedBox(
+                        width: double.infinity,
+                        height: 56,
+                        child: OutlinedButton(
+                          onPressed: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const MainScreen(showRestoreSheet: true),
+                              ),
+                            );
+                          },
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: Colors
+                                .transparent, // "duz background" (scaffold background implied)
+                            side: const BorderSide(
+                              color: AppColors.buttonBackground,
+                              width: 1.5,
                             ),
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 5),
-                      _SocialButton(
-                        assetName: 'assets/icons/facebook_logo.svg',
-                        text: 'Continue with Facebook',
-                        onTap: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const RegistrationScreen(),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4),
                             ),
-                          );
-                        },
+                          ),
+                          child: const Text(
+                            'Already have an account? Log in',
+                            style: TextStyle(
+                              fontFamily: 'RobotoSlab',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors
+                                  .buttonBackground, // Matching the border usually looks best, but white works too.
+                              // User didn't specify text color, but "buttonBackground" is likely a light color (cream),
+                              // so using it for text ensures visibility on dark background.
+                            ),
+                          ),
+                        ),
                       ),
-                      if (Platform.isIOS) ...[
-                        const SizedBox(height: 5),
-                        _SocialButton(
-                          assetName: 'assets/icons/apple_logo.svg',
-                          text: 'Continue with Apple',
-                          onTap: () {
+                      const SizedBox(height: 16),
+                      // "Continue" Button (Bottom)
+                      SizedBox(
+                        width: double.infinity,
+                        height: 56,
+                        child: ElevatedButton(
+                          onPressed: () {
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
@@ -209,8 +235,27 @@ class _LoginScreenState extends State<LoginScreen>
                               ),
                             );
                           },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors
+                                .buttonBackground, // Requested background
+                            foregroundColor: Colors
+                                .black, // Presumably dark text for light background
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                          child: const Text(
+                            'Continue',
+                            style: TextStyle(
+                              fontFamily: 'RobotoSlab',
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
                         ),
-                      ],
+                      ),
                     ],
                   ),
                   const SizedBox(height: 24),
@@ -223,49 +268,13 @@ class _LoginScreenState extends State<LoginScreen>
                     child: Column(
                       children: [
                         Text(
-                          'You have to be at least 18.',
+                          'Talk to strangers. Connect anonymously.',
+                          textAlign: TextAlign.center,
                           style: TextStyle(
                             fontFamily: 'RobotoSlab',
-                            fontSize: 16,
-                            color: Colors.white.withOpacity(0.9),
+                            fontSize: 14,
+                            color: AppColors.secondary,
                             fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        RichText(
-                          textAlign: TextAlign.center,
-                          text: TextSpan(
-                            style: TextStyle(
-                              fontFamily: 'RobotoSlab',
-                              fontSize: 14,
-                              color: Colors.white.withOpacity(0.7),
-                            ),
-                            children: [
-                              const TextSpan(
-                                text: 'By using app you agree with our \n',
-                              ),
-                              TextSpan(
-                                text: 'Terms & Conditions',
-                                style: const TextStyle(
-                                  decoration: TextDecoration.underline,
-                                  color: AppColors.secondary,
-                                ),
-                                recognizer: TapGestureRecognizer()
-                                  ..onTap = () =>
-                                      _launchUrl('https://example.com/terms'),
-                              ),
-                              const TextSpan(text: ' and '),
-                              TextSpan(
-                                text: 'Privacy Policy',
-                                style: const TextStyle(
-                                  decoration: TextDecoration.underline,
-                                  color: AppColors.secondary,
-                                ),
-                                recognizer: TapGestureRecognizer()
-                                  ..onTap = () =>
-                                      _launchUrl('https://example.com/privacy'),
-                              ),
-                            ],
                           ),
                         ),
                       ],
@@ -277,74 +286,6 @@ class _LoginScreenState extends State<LoginScreen>
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _SocialButton extends StatelessWidget {
-  final String assetName;
-  final String text;
-  final VoidCallback onTap;
-
-  const _SocialButton({
-    required this.assetName,
-    required this.text,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        height: 56,
-        decoration: BoxDecoration(
-          // Paper/Cream background color to match the 'cutout' aesthetic
-          color: AppColors.buttonBackground,
-          borderRadius: BorderRadius.circular(
-            4,
-          ), // Shallower radius for a 'cut' look
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(4),
-            overlayColor: MaterialStateProperty.all(
-              Colors.black.withOpacity(0.1),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Row(
-                children: [
-                  // Icon - Tinted Black
-                  SvgPicture.asset(assetName, width: 24, height: 24),
-
-                  // Centered Text
-                  Expanded(
-                    child: Text(
-                      text,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: 'RobotoSlab',
-                        fontSize: 16,
-                        fontWeight:
-                            FontWeight.w600, // Slightly lighter than bold
-                        color: Colors.black,
-                        letterSpacing: 0.3,
-                      ),
-                    ),
-                  ),
-
-                  // Invisible Spacer to perfectly center the text
-                  const SizedBox(width: 24),
-                ],
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }

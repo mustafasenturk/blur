@@ -304,7 +304,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           style: TextStyle(fontFamily: 'RobotoSlab', color: Colors.white),
         ),
         content: Text(
-          'You are $_age? You won\'t be able to change it later.',
+          'You are $_age?',
           style: const TextStyle(
             fontFamily: 'RobotoSlab',
             color: Colors.white70,
@@ -361,7 +361,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     } else {
       // Finish registration
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const MainScreen()),
+        MaterialPageRoute(
+          builder: (context) => const MainScreen(showRestoreSheet: false),
+        ),
         (route) => false,
       );
     }
@@ -413,6 +415,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               onTap: () {
                 setState(() {
                   _selectedGender = 'Man';
+                  _heightCm = 180;
                   _initialAnimationComplete = true;
                 });
               },
@@ -431,6 +434,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               onTap: () {
                 setState(() {
                   _selectedGender = 'Woman';
+                  _heightCm = 170;
                   _initialAnimationComplete = true;
                 });
               },
@@ -452,7 +456,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 32.0),
           child: Text(
-            "Make sure your gender is correct. You won't be able to change it later.",
+            "Make sure your gender is correct",
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: 'RobotoSlab',

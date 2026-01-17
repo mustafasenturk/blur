@@ -26,7 +26,7 @@ abstract final class AppTheme {
         centerTitle: true,
         backgroundColor: AppColors.backgroundLight,
         foregroundColor: AppColors.textPrimaryLight,
-        systemOverlayStyle: SystemUiOverlayStyle.dark,
+        systemOverlayStyle: SystemUiOverlayStyle.light,
         titleTextStyle: AppTextStyles.titleLarge,
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
