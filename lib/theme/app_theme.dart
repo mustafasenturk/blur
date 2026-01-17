@@ -20,7 +20,7 @@ abstract final class AppTheme {
         onSurface: AppColors.textPrimaryLight,
         onError: AppColors.white,
       ),
-      scaffoldBackgroundColor: AppColors.backgroundLight,
+      scaffoldBackgroundColor: AppColors.backgroundDark,
       appBarTheme: const AppBarTheme(
         elevation: 0,
         centerTitle: true,

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'app_colors.dart';
 
 abstract final class AppTextStyles {
-  static const String fontFamily = 'Nunito';
+  static const String fontFamily = 'RobotoSlab';
 
   // Display
   static const TextStyle displayLarge = TextStyle(

@@ -5,11 +5,12 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
+
 import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
 
 import '../theme/app_colors.dart';
+import 'registration_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,14 +19,30 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen>
+    with SingleTickerProviderStateMixin {
   late VideoPlayerController _controller;
+  late AnimationController _blurController;
+  late Animation<double> _blurAnimation;
   bool _isInitialized = false;
 
   @override
   void initState() {
     super.initState();
     _initializeVideo();
+    _blurController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3), // Slow unblur over 5 seconds
+    );
+    _blurAnimation = Tween<double>(
+      begin: 8.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(parent: _blurController, curve: Curves.easeOut));
+
+    // Start delay then forward
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) _blurController.forward();
+    });
   }
 
   Future<void> _initializeVideo() async {
@@ -42,6 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void dispose() {
     _controller.dispose();
+    _blurController.dispose();
     super.dispose();
   }
 
@@ -58,7 +76,7 @@ class _LoginScreenState extends State<LoginScreen> {
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           // Video Background
@@ -74,7 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             )
           else
-            Container(color: Colors.black),
+            Container(color: Theme.of(context).scaffoldBackgroundColor),
 
           // Overlay Gradient
           Container(
@@ -112,7 +130,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       Text(
                         'Ready to',
-                        style: GoogleFonts.outfit(
+                        style: TextStyle(
+                          fontFamily: 'RobotoSlab',
                           fontSize: 48,
                           height: 1.1,
                           fontWeight: FontWeight.w900,
@@ -120,15 +139,22 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      // Blur effect applied to "Unblur?" text
-                      ImageFiltered(
-                        imageFilter: ui.ImageFilter.blur(
-                          sigmaX: 8.0,
-                          sigmaY: 8.0,
-                        ),
+                      // Animated Blur effect applied to "Unblur?" text
+                      AnimatedBuilder(
+                        animation: _blurAnimation,
+                        builder: (context, child) {
+                          return ImageFiltered(
+                            imageFilter: ui.ImageFilter.blur(
+                              sigmaX: _blurAnimation.value,
+                              sigmaY: _blurAnimation.value,
+                            ),
+                            child: child,
+                          );
+                        },
                         child: Text(
                           'Unblur?',
-                          style: GoogleFonts.outfit(
+                          style: TextStyle(
+                            fontFamily: 'RobotoSlab',
                             fontSize: 80,
                             height: 1.1,
                             fontWeight: FontWeight.w900,
@@ -148,7 +174,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         assetName: 'assets/icons/google_logo.svg',
                         text: 'Continue with Google',
                         onTap: () {
-                          // Handle Google Login
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const RegistrationScreen(),
+                            ),
+                          );
                         },
                       ),
                       const SizedBox(height: 5),
@@ -156,7 +187,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         assetName: 'assets/icons/facebook_logo.svg',
                         text: 'Continue with Facebook',
                         onTap: () {
-                          // Handle Facebook Login
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const RegistrationScreen(),
+                            ),
+                          );
                         },
                       ),
                       if (Platform.isIOS) ...[
@@ -165,7 +201,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           assetName: 'assets/icons/apple_logo.svg',
                           text: 'Continue with Apple',
                           onTap: () {
-                            // Handle Apple Login
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const RegistrationScreen(),
+                              ),
+                            );
                           },
                         ),
                       ],
@@ -182,7 +224,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         Text(
                           'You have to be at least 18.',
-                          style: GoogleFonts.inter(
+                          style: TextStyle(
+                            fontFamily: 'RobotoSlab',
                             fontSize: 16,
                             color: Colors.white.withOpacity(0.9),
                             fontWeight: FontWeight.w500,
@@ -192,7 +235,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         RichText(
                           textAlign: TextAlign.center,
                           text: TextSpan(
-                            style: GoogleFonts.inter(
+                            style: TextStyle(
+                              fontFamily: 'RobotoSlab',
                               fontSize: 14,
                               color: Colors.white.withOpacity(0.7),
                             ),
@@ -251,59 +295,51 @@ class _SocialButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Determine if we need to tint the icon (e.g. for Apple logo on dark background)
-    final bool isApple = assetName.contains('apple');
-
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        height: 60, // Reduced height
+        height: 56,
         decoration: BoxDecoration(
-          // Black Glassmorphism background
-          color: Colors.black.withOpacity(0.4),
-          borderRadius: BorderRadius.circular(16),
-          // Subtle lighter border for definition
-          border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
+          // Paper/Cream background color to match the 'cutout' aesthetic
+          color: AppColors.buttonBackground,
+          borderRadius: BorderRadius.circular(
+            4,
+          ), // Shallower radius for a 'cut' look
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
             onTap: onTap,
-            borderRadius: BorderRadius.circular(16),
-            highlightColor: Colors.white.withOpacity(0.1),
-            splashColor: Colors.white.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(4),
+            overlayColor: MaterialStateProperty.all(
+              Colors.black.withOpacity(0.1),
+            ),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Row(
                 children: [
-                  // Icon - Increased size
-                  SvgPicture.asset(
-                    assetName,
-                    width: 32,
-                    height: 32,
-                    // Tint Apple logo white, keep others original
-                    colorFilter: isApple
-                        ? const ColorFilter.mode(Colors.white, BlendMode.srcIn)
-                        : null,
-                  ),
+                  // Icon - Tinted Black
+                  SvgPicture.asset(assetName, width: 24, height: 24),
 
                   // Centered Text
                   Expanded(
                     child: Text(
                       text,
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.outfit(
-                        fontSize: 18, // Increased font size
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                        letterSpacing: 0.5,
+                      style: TextStyle(
+                        fontFamily: 'RobotoSlab',
+                        fontSize: 16,
+                        fontWeight:
+                            FontWeight.w600, // Slightly lighter than bold
+                        color: Colors.black,
+                        letterSpacing: 0.3,
                       ),
                     ),
                   ),
 
-                  // Invisible Spacer to perfectly center the text (matches icon size)
-                  const SizedBox(width: 32),
+                  // Invisible Spacer to perfectly center the text
+                  const SizedBox(width: 24),
                 ],
               ),
             ),
