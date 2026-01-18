@@ -11,6 +11,7 @@ class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
   final List<Widget>? actions;
   final PreferredSizeWidget? bottom;
   final bool centerTitle;
+  final bool showBackButton;
 
   const GradientAppBar({
     super.key,
@@ -22,7 +23,8 @@ class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.leadingRightPadding,
     this.actions,
     this.bottom,
-    this.centerTitle = true,
+    this.centerTitle = false,
+    this.showBackButton = true,
   });
 
   @override
@@ -31,50 +33,47 @@ class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.black, // Increased yellow intensity
-            AppColors.backgroundDark,
-          ],
-          begin: FractionalOffset(0.0, 0.0), // Top
-          end: FractionalOffset(0.0, 1.0), // Bottom
-          stops: [0.0, 1.0],
-          tileMode: TileMode.clamp,
+    return AppBar(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      automaticallyImplyLeading: showBackButton,
+      flexibleSpace: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [AppColors.black, AppColors.backgroundDark],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            stops: [0.0, 1.0],
+          ),
         ),
       ),
-      child: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        leadingWidth: leadingWidth,
-        leading: leading != null
-            ? Padding(
-                padding: EdgeInsets.only(
-                  left: leadingLeftPadding ?? 0,
-                  right: leadingRightPadding ?? 0,
-                ),
-                child: leading,
-              )
-            : null,
-        title:
-            titleWidget ??
-            (title != null
-                ? Text(
-                    title!,
-                    style: const TextStyle(
-                      fontFamily: 'RobotoSlab',
-                      fontSize: 24.0,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  )
-                : null),
-        centerTitle: centerTitle,
-        actions: actions,
-        bottom: bottom,
-      ),
+      leadingWidth: showBackButton ? leadingWidth : 0,
+      leading: leading != null
+          ? Padding(
+              padding: EdgeInsets.only(
+                left: leadingLeftPadding ?? 0,
+                right: leadingRightPadding ?? 0,
+              ),
+              child: leading,
+            )
+          : null,
+      title:
+          titleWidget ??
+          (title != null
+              ? Text(
+                  title!,
+                  style: const TextStyle(
+                    fontFamily: 'RobotoSlab',
+                    fontSize: 24.0,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                )
+              : null),
+      centerTitle: centerTitle,
+      actions: actions,
+      bottom: bottom,
     );
   }
 }

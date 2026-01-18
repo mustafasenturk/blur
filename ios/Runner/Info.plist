@@ -2,6 +2,40 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 	<dict>
+		<!-- Network -->
+		<key>com.apple.security.network.client</key>
+		<true/>
+		
+		<!-- App Tracking Transparency (for analytics) -->
+		<key>NSUserTrackingUsageDescription</key>
+		<string>We use tracking to provide personalized anonymous matching and improve your experience.</string>
+		
+		<!-- Camera & Photos -->
+		<key>NSCameraUsageDescription</key>
+		<string>Blur needs camera access so you can take photos for your profile.</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>Blur needs photo library access so you can choose photos for your profile.</string>
+		<key>NSPhotoLibraryAddUsageDescription</key>
+		<string>Blur needs permission to save photos to your library.</string>
+		
+		<!-- Microphone (for voice messages) -->
+		<key>NSMicrophoneUsageDescription</key>
+		<string>Blur needs microphone access for voice messages and audio recordings.</string>
+		
+		<!-- Location (for nearby matching) -->
+		<key>NSLocationWhenInUseUsageDescription</key>
+		<string>Blur uses your location to find anonymous chat partners near you.</string>
+		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+		<string>Blur uses your location to find anonymous chat partners near you.</string>
+		
+		<!-- Contacts (for friend suggestions - optional) -->
+		<key>NSContactsUsageDescription</key>
+		<string>Blur can help you find friends who are already using the app.</string>
+		
+		<!-- Face ID (for secure login - optional) -->
+		<key>NSFaceIDUsageDescription</key>
+		<string>Use Face ID to securely log in to Blur.</string>
+		
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>

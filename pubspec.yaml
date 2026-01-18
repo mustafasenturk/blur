@@ -39,6 +39,40 @@ dependencies:
   google_fonts: ^7.0.2
   url_launcher: ^6.3.2
   lottie: ^3.3.2
+  
+  # State Management
+  flutter_riverpod: ^2.5.1
+  riverpod_annotation: ^2.3.5
+  
+  # Routing
+  go_router: ^14.2.0
+  
+  # Storage
+  shared_preferences: ^2.2.2
+  flutter_secure_storage: ^9.0.0
+  
+  # Permissions
+  permission_handler: ^11.3.0
+  
+  # Image Picker
+  image_picker: ^1.0.7
+  cached_network_image: ^3.3.1
+  
+  # Network & Connectivity
+  connectivity_plus: ^6.0.0
+  
+  # UI Utilities
+  shimmer: ^3.0.0
+  intl: ^0.19.0
+  
+  # In-App Purchases (RevenueCat)
+  purchases_flutter: ^8.1.1
+
+  # Audio Recording & Playback
+  record: ^6.1.2
+  audioplayers: ^6.1.0
+  path_provider: ^2.1.2
+
 
 dev_dependencies:
   flutter_test:
