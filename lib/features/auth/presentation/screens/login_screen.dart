@@ -186,8 +186,8 @@ class _LoginScreenState extends State<LoginScreen>
                         height: 56,
                         child: OutlinedButton(
                           onPressed: () {
-                            // Navigate to home using GoRouter
-                            context.go('/match');
+                            // Navigate to home using GoRouter with restore intent
+                            context.go('/match', extra: {'show_restore': true});
                           },
                           style: OutlinedButton.styleFrom(
                             backgroundColor: Colors

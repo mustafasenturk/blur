@@ -299,6 +299,7 @@ class _RegisterFlowScreenState extends State<RegisterFlowScreen> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
         backgroundColor: const Color(0xFF222222),
         title: const Text(
           'Are you sure?',

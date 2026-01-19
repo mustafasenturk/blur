@@ -3,6 +3,8 @@ import 'package:flutter/cupertino.dart';
 import '../../../../theme/app_colors.dart';
 import 'dart:math';
 
+import '../../../../widgets/gradient_app_bar.dart';
+
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
 
@@ -16,8 +18,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   // Selection States
   String _selectedGender = 'Male';
   String _selectedSexuality = 'Straight';
-  int _selectedAge = 18;
+  DateTime _selectedDate = DateTime.now().subtract(
+    const Duration(days: 365 * 18),
+  );
   int _selectedHeight = 170; // cm
+  bool _useMetric = true;
+
+  String get _formattedHeight {
+    if (_useMetric) {
+      return "$_selectedHeight cm";
+    } else {
+      final totalInches = (_selectedHeight / 2.54).round();
+      final feet = totalInches ~/ 12;
+      final inches = totalInches % 12;
+      return "$feet' $inches\"";
+    }
+  }
 
   // User to provide 100 male/100 female nicknames
   final List<String> _maleNicknames = [
@@ -275,23 +291,29 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: const Text(
-          'Edit Profile',
-          style: TextStyle(
-            fontFamily: 'RobotoSlab',
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
+      appBar: GradientAppBar(
+        title: 'Edit Profile',
         centerTitle: true,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: TextButton(
+              onPressed: () {
+                // TODO: Implement save logic
+                Navigator.pop(context);
+              },
+              child: const Text(
+                'Done',
+                style: TextStyle(
+                  fontFamily: 'RobotoSlab',
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -299,60 +321,97 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // USERNAME SECTION
-            _buildSectionLabel(Icons.alternate_email, "Nickname"),
-            const SizedBox(height: 8),
-            const Text(
-              "Nickname will be shown in chat",
-              style: TextStyle(
-                fontFamily: 'RobotoSlab',
-                color: Colors.white54,
-                fontSize: 12,
-              ),
-            ),
-            const SizedBox(height: 12),
             Container(
+              padding: const EdgeInsets.fromLTRB(16, 16, 8, 16),
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.white10),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              child: TextField(
-                controller: _usernameController,
-                style: const TextStyle(
-                  fontFamily: 'RobotoSlab',
-                  color: Colors.white,
-                  fontSize: 16,
-                ),
-                maxLength: 32,
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  counterText: "", // Hide counter
-                  hintText: "Enter nickname",
-                  hintStyle: TextStyle(color: Colors.white24),
-                ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Nickname",
+                          style: TextStyle(
+                            fontFamily: 'RobotoSlab',
+                            fontSize: 12,
+                            color: Colors.white54,
+                          ),
+                        ),
+                        TextField(
+                          controller: _usernameController,
+                          style: const TextStyle(
+                            fontFamily: 'RobotoSlab',
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLength: 32,
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(4),
+                              borderSide: BorderSide.none,
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(4),
+                              borderSide: BorderSide.none,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(4),
+                              borderSide: BorderSide.none,
+                            ),
+                            errorBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(4),
+                              borderSide: BorderSide.none,
+                            ),
+                            disabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(4),
+                              borderSide: BorderSide.none,
+                            ),
+                            filled: true,
+                            fillColor: Theme.of(
+                              context,
+                            ).scaffoldBackgroundColor,
+                            counterText: "", // Hide counter
+                            hintText: "Enter nickname",
+                            hintStyle: const TextStyle(color: Colors.white24),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            isDense: true,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.refresh,
+                      color: AppColors.primary,
+                      size: 24,
+                    ),
+                    onPressed: _generateNickname,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: _generateNickname,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  "Generate nickname",
-                  style: TextStyle(
-                    fontFamily: 'RobotoSlab',
-                    color: Colors.black, // Dark text on Gold
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+            const SizedBox(height: 8),
+            const Padding(
+              padding: EdgeInsets.only(left: 4.0),
+              child: Text(
+                "Nickname will be shown in chat",
+                style: TextStyle(
+                  fontFamily: 'RobotoSlab',
+                  color: Colors.white54,
+                  fontSize: 12,
                 ),
               ),
             ),
@@ -363,10 +422,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             _buildDropdownTile(
               label: "My gender",
               value: _selectedGender,
-              icon: Icons.person_outline,
               onTap: () => _showSelectionSheet(
                 title: "My gender",
-                subtitle: "Choose your gender to get better matches",
                 options: _genders,
                 currentValue: _selectedGender,
                 onSelected: (val) => setState(() => _selectedGender = val),
@@ -375,14 +432,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
             const SizedBox(height: 24),
 
+            // DATE OF BIRTH SECTION
+            _buildDropdownTile(
+              label: "Date Of Birth",
+              value:
+                  "${_selectedDate.day} | ${_selectedDate.month} | ${_selectedDate.year}",
+              onTap: () => _selectDate(context),
+            ),
+
+            const SizedBox(height: 24),
+
             // SEXUALITY SECTION
             _buildDropdownTile(
               label: "Sexuality",
               value: _selectedSexuality,
-              icon: Icons.favorite_border,
               onTap: () => _showSelectionSheet(
                 title: "Sexuality",
-                subtitle: "Select your sexual orientation",
                 options: _sexualities,
                 currentValue: _selectedSexuality,
                 onSelected: (val) => setState(() => _selectedSexuality = val),
@@ -391,82 +456,37 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
             const SizedBox(height: 24),
 
-            // AGE SECTION
+            // HEIGHT SECTION
             _buildDropdownTile(
-              label: "Age",
-              value: "$_selectedAge years",
-              icon: Icons.cake_outlined,
-              onTap: _showAgePicker,
+              label: "Height",
+              value: _formattedHeight,
+              onTap: _showHeightPicker,
             ),
 
             const SizedBox(height: 24),
 
-            // HEIGHT SECTION
+            // LOCATION SECTION
             _buildDropdownTile(
-              label: "Height",
-              value: "$_selectedHeight cm",
-              icon: Icons.height,
-              onTap: _showHeightPicker,
+              label: "Location",
+              value: "Istanbul, Turkey",
+              onTap: () {}, // No action
+              icon: Icons.refresh,
+              iconColor: AppColors.primary,
             ),
 
             const SizedBox(height: 48),
-
-            // SAVE BUTTON (Optional, typically autosave or manual save)
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                onPressed: () {
-                  // TODO: Implement save logic
-                  Navigator.pop(context);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.buttonBackground,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  "Save Changes",
-                  style: TextStyle(
-                    fontFamily: 'RobotoSlab',
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSectionLabel(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, color: Colors.white70, size: 20),
-        const SizedBox(width: 8),
-        Text(
-          text,
-          style: const TextStyle(
-            fontFamily: 'RobotoSlab',
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildDropdownTile({
     required String label,
     required String value,
-    required IconData icon,
     required VoidCallback onTap,
+    IconData? icon,
+    Color? iconColor,
   }) {
     return GestureDetector(
       onTap: onTap,
@@ -479,8 +499,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ),
         child: Row(
           children: [
-            Icon(icon, color: Colors.white70, size: 24),
-            const SizedBox(width: 16),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -505,11 +523,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ],
             ),
             const Spacer(),
-            const Icon(
-              Icons.arrow_forward_ios,
-              color: Colors.white24,
-              size: 16,
+            Icon(
+              icon ?? Icons.arrow_forward_ios,
+              color: iconColor ?? Colors.white24,
+              size: icon == Icons.refresh
+                  ? 24
+                  : 16, // Slightly larger for refresh icon
             ),
+            const SizedBox(width: 8),
           ],
         ),
       ),
@@ -536,35 +557,28 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         child: Column(
           children: [
             // Handle bar
-            Container(
-              margin: const EdgeInsets.only(top: 12, bottom: 8),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.white24,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
             Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(
-                        Icons.person_outline, // Generic icon, maybe pass it in
-                        color: Colors.white70,
-                      ),
-                      const SizedBox(width: 12),
                       Text(
                         title,
                         style: const TextStyle(
                           fontFamily: 'RobotoSlab',
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: AppColors.primary,
                         ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.close, color: AppColors.primary),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
                       ),
                     ],
                   ),
@@ -644,141 +658,300 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  void _showAgePicker() {
-    // Simple integer picker for Age
-    final FixedExtentScrollController scrollController =
-        FixedExtentScrollController(initialItem: _selectedAge - 18);
+  void _selectDate(BuildContext context) {
+    final DateTime today = DateTime.now();
+    final DateTime lastDate = DateTime(today.year - 18, today.month, today.day);
+    DateTime initialDate = _selectedDate;
+    if (initialDate.isAfter(lastDate)) initialDate = lastDate;
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: 300,
-        decoration: const BoxDecoration(
-          color: AppColors.backgroundDark,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    "Select Age",
-                    style: TextStyle(
-                      fontFamily: 'RobotoSlab',
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+      backgroundColor: const Color(0xFF222222),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (BuildContext builder) {
+        return SizedBox(
+          height: 300,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 12.0,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Choose your date of birth',
+                      style: TextStyle(
+                        fontFamily: 'RobotoSlab',
+                        color: AppColors.primary,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text(
-                      "Done",
-                      style: TextStyle(color: AppColors.primary),
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          // Ensure we save the date if it hasn't changed from initial
+                          if (_selectedDate.isAfter(lastDate)) {
+                            _selectedDate = lastDate;
+                          }
+                        });
+                        Navigator.pop(context);
+                      },
+                      child: const Text(
+                        'Done',
+                        style: TextStyle(
+                          fontFamily: 'RobotoSlab',
+                          color: AppColors.primary,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            Expanded(
-              child: CupertinoPickerWrapper(
-                scrollController: scrollController,
-                onSelectedItemChanged: (index) {
-                  setState(() {
-                    _selectedAge = 18 + index;
-                  });
-                },
-                children: List.generate(
-                  82,
-                  (index) => Center(
-                    child: Text(
-                      "${18 + index}",
-                      style: const TextStyle(
+              Expanded(
+                child: CupertinoTheme(
+                  data: const CupertinoThemeData(
+                    brightness: Brightness.dark,
+                    textTheme: CupertinoTextThemeData(
+                      dateTimePickerTextStyle: TextStyle(
                         fontFamily: 'RobotoSlab',
                         color: Colors.white,
                         fontSize: 22,
                       ),
                     ),
                   ),
-                ), // 18 to 99
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: CupertinoDatePicker(
+                      mode: CupertinoDatePickerMode.date,
+                      initialDateTime: initialDate,
+                      maximumDate: lastDate,
+                      minimumDate: DateTime(1900),
+                      onDateTimeChanged: (DateTime newDate) {
+                        setState(() => _selectedDate = newDate);
+                      },
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ],
-        ),
-      ),
+            ],
+          ),
+        );
+      },
     );
   }
 
   void _showHeightPicker() {
-    // Simple integer picker for Height
-    final FixedExtentScrollController scrollController =
-        FixedExtentScrollController(initialItem: _selectedHeight - 100);
+    // 100 cm to 250 cm
+    // 100 cm = approx 3'3"
+    // 250 cm = approx 8'2"
+
+    bool tempIsMetric = _useMetric; // Changed from isMetric to tempIsMetric
+    int tempHeightCm = _selectedHeight;
 
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: 300,
-        decoration: const BoxDecoration(
-          color: AppColors.backgroundDark,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            // Calculate initial item index based on current unit
+            int initialItemIndex = 0;
+            if (tempIsMetric) {
+              // Changed from isMetric to tempIsMetric
+              initialItemIndex = tempHeightCm - 100;
+            } else {
+              // Convert current cm to total inches, then find offset from base 3'3" (39 inches)
+              final totalInches = (tempHeightCm / 2.54).round();
+              // Base is 100cm ~ 39 inches
+              const baseInches = 39;
+              initialItemIndex = (totalInches - baseInches).clamp(0, 60);
+              // max 250cm ~ 98 inches. 98 - 39 = 59.
+            }
+
+            final FixedExtentScrollController scrollController =
+                FixedExtentScrollController(initialItem: initialItemIndex);
+
+            return Container(
+              height: 350,
+              decoration: const BoxDecoration(
+                color: AppColors.backgroundDark,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Column(
                 children: [
-                  const Text(
-                    "Select Height",
-                    style: TextStyle(
-                      fontFamily: 'RobotoSlab',
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(top: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white24,
+                      borderRadius: BorderRadius.circular(2),
                     ),
                   ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text(
-                      "Done",
-                      style: TextStyle(color: AppColors.primary),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 12,
+                    ),
+                    child: Stack(
+                      // Replaced existing Row with Stack
+                      alignment: Alignment.center,
+                      children: [
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: const Text(
+                            "Select Height",
+                            style: TextStyle(
+                              fontFamily: 'RobotoSlab',
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                setModalState(() {
+                                  tempIsMetric = true;
+                                });
+                              },
+                              child: Text(
+                                "CM",
+                                style: TextStyle(
+                                  fontFamily: 'RobotoSlab',
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: tempIsMetric
+                                      ? Colors.white
+                                      : Colors.white24,
+                                ),
+                              ),
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 8.0),
+                              child: Text(
+                                "|",
+                                style: TextStyle(
+                                  color: Colors.white24,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                setModalState(() {
+                                  tempIsMetric = false;
+                                });
+                              },
+                              child: Text(
+                                "FEET",
+                                style: TextStyle(
+                                  fontFamily: 'RobotoSlab',
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: !tempIsMetric
+                                      ? Colors.white
+                                      : Colors.white24,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () {
+                              setState(() {
+                                _selectedHeight = tempHeightCm;
+                                _useMetric = tempIsMetric; // Updated _useMetric
+                              });
+                              Navigator.pop(context);
+                            },
+                            child: const Text(
+                              "Done",
+                              style: TextStyle(
+                                color: AppColors.primary,
+                                fontFamily: 'RobotoSlab',
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: CupertinoPickerWrapper(
+                      // Key forces recreation when unit changes, preventing controller mismatch
+                      key: ValueKey(
+                        tempIsMetric,
+                      ), // Changed from isMetric to tempIsMetric
+                      scrollController: scrollController,
+                      onSelectedItemChanged: (index) {
+                        if (tempIsMetric) {
+                          // Changed from isMetric to tempIsMetric
+                          tempHeightCm = 100 + index;
+                        } else {
+                          // Base is 39 inches (3'3")
+                          // Index adds inches
+                          int totalInches = 39 + index;
+                          // Convert back to CM for storage
+                          tempHeightCm = (totalInches * 2.54).round();
+                        }
+                      },
+                      children:
+                          tempIsMetric // Changed from isMetric to tempIsMetric
+                          ? List.generate(
+                              151, // 100 to 250 inclusive
+                              (index) => Center(
+                                child: Text(
+                                  "${100 + index} cm",
+                                  style: const TextStyle(
+                                    fontFamily: 'RobotoSlab',
+                                    color: Colors.white,
+                                    fontSize: 22,
+                                  ),
+                                ),
+                              ),
+                            )
+                          : List.generate(
+                              60, // Approx 3'3" (39") to 8'2" (98"). 98-39 = 59 items. let's say 60.
+                              (index) {
+                                int totalInches = 39 + index;
+                                int feet = totalInches ~/ 12;
+                                int inches = totalInches % 12;
+                                return Center(
+                                  child: Text(
+                                    "$feet' $inches\"",
+                                    style: const TextStyle(
+                                      fontFamily: 'RobotoSlab',
+                                      color: Colors.white,
+                                      fontSize: 22,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
                     ),
                   ),
                 ],
               ),
-            ),
-            Expanded(
-              child: CupertinoPickerWrapper(
-                scrollController: scrollController,
-                onSelectedItemChanged: (index) {
-                  setState(() {
-                    _selectedHeight = 100 + index;
-                  });
-                },
-                children: List.generate(
-                  151,
-                  (index) => Center(
-                    child: Text(
-                      "${100 + index} cm",
-                      style: const TextStyle(
-                        fontFamily: 'RobotoSlab',
-                        color: Colors.white,
-                        fontSize: 22,
-                      ),
-                    ),
-                  ),
-                ), // 100 to 250
-              ),
-            ),
-          ],
-        ),
-      ),
+            );
+          },
+        );
+      },
     );
   }
 }
@@ -804,9 +977,9 @@ class CupertinoPickerWrapper extends StatelessWidget {
       diameterRatio: 1.2,
       onSelectedItemChanged: onSelectedItemChanged,
       selectionOverlay: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           border: Border.symmetric(
-            horizontal: BorderSide(color: Colors.white24, width: 0.5),
+            horizontal: BorderSide(color: Colors.white24, width: 1),
           ),
         ),
       ),

@@ -13,7 +13,7 @@ import '../../../../widgets/dashed_border_painter.dart';
 class AboutMeModal extends StatefulWidget {
   final String? initialBio;
   final String? initialAudioPath;
-  final Function(String bio, String? audioPath) onSave;
+  final Function(String bio, String? audioPath, int? duration) onSave;
 
   const AboutMeModal({
     super.key,
@@ -167,7 +167,11 @@ class _AboutMeModalState extends State<AboutMeModal>
   }
 
   void _handleSave() {
-    widget.onSave(_bioController.text, _recordedAudioPath);
+    widget.onSave(
+      _bioController.text,
+      _recordedAudioPath,
+      _recordingSeconds > 0 ? _recordingSeconds : null,
+    );
     Navigator.of(context).pop();
   }
 
@@ -281,7 +285,7 @@ class _AboutMeModalState extends State<AboutMeModal>
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.05),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(4),
                   border: Border.all(color: Colors.white12),
                 ),
                 child: Row(

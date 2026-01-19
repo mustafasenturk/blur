@@ -1,8 +1,11 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
 import '../../../../theme/app_colors.dart';
 import '../../../../widgets/gradient_app_bar.dart';
+import '../../../auth/presentation/widgets/restore_account_modal.dart';
+import 'package:go_router/go_router.dart';
 
 /// Match screen - Find anonymous chat partners
 class MatchScreen extends StatefulWidget {
@@ -14,6 +17,7 @@ class MatchScreen extends StatefulWidget {
 
 class _MatchScreenState extends State<MatchScreen> {
   String _selectedGenderFilter = 'Everyone';
+  bool _isMatching = false;
   final Set<String> _selectedInterests = {};
 
   // Guilty Pleasures Data (same as register step 4)
@@ -41,6 +45,28 @@ class _MatchScreenState extends State<MatchScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        final state = GoRouterState.of(context);
+        final extra = state.extra as Map<String, dynamic>?;
+        if (extra != null && extra['show_restore'] == true) {
+          showModalBottomSheet(
+            context: context,
+            backgroundColor: Colors.transparent,
+            isScrollControlled: true,
+            useRootNavigator: true,
+            builder: (context) => const RestoreAccountModal(),
+          );
+        }
+      } catch (e) {
+        // GoRouterState might not be found if not in a route, ignore
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -51,8 +77,20 @@ class _MatchScreenState extends State<MatchScreen> {
           children: [
             Image.asset('assets/icons/logo_transparent.png', height: 24),
             const SizedBox(width: 8),
+            ImageFiltered(
+              imageFilter: ImageFilter.blur(sigmaX: 1.5, sigmaY: 1.5),
+              child: const Text(
+                'Blur',
+                style: TextStyle(
+                  fontFamily: 'RobotoSlab',
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
             const Text(
-              'Blur:Chat Anonymously',
+              ':Chat Anonymously',
               style: TextStyle(
                 fontFamily: 'RobotoSlab',
                 fontSize: 20,
@@ -85,25 +123,50 @@ class _MatchScreenState extends State<MatchScreen> {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // TODO: Implement chat logic
-                  },
+                  onPressed: _isMatching
+                      ? null
+                      : () {
+                          setState(() {
+                            _isMatching = true;
+                          });
+                        },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.buttonBackground,
                     foregroundColor: Colors.black,
+                    disabledBackgroundColor: AppColors.buttonBackground
+                        .withOpacity(0.5),
+                    disabledForegroundColor: Colors.black.withOpacity(0.5),
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
-                  child: const Text(
-                    'Chat Stranger',
-                    style: TextStyle(
-                      fontFamily: 'RobotoSlab',
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
-                    ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (_isMatching) ...[
+                        const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.black54,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      const Text(
+                        'Chat Stranger',
+                        style: TextStyle(
+                          fontFamily: 'RobotoSlab',
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -148,7 +211,7 @@ class _MatchScreenState extends State<MatchScreen> {
                     height: 48,
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(4),
                       border: Border.all(color: Colors.white12),
                     ),
                     child: Row(
@@ -158,7 +221,7 @@ class _MatchScreenState extends State<MatchScreen> {
                           iconPath: 'assets/images/coin.png',
                           iconLeft: true,
                           borderRadius: const BorderRadius.horizontal(
-                            left: Radius.circular(8),
+                            left: Radius.circular(4),
                           ),
                         ),
                         Container(width: 1, color: Colors.white12),
@@ -169,7 +232,7 @@ class _MatchScreenState extends State<MatchScreen> {
                           iconPath: 'assets/images/coin.png',
                           iconLeft: false,
                           borderRadius: const BorderRadius.horizontal(
-                            right: Radius.circular(8),
+                            right: Radius.circular(4),
                           ),
                         ),
                       ],
@@ -198,7 +261,7 @@ class _MatchScreenState extends State<MatchScreen> {
                       ),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.05),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(4),
                         border: Border.all(color: Colors.white12),
                       ),
                       child: Row(

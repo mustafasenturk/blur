@@ -11,6 +11,7 @@ class GuiltyPleasureCard extends StatefulWidget {
   final String imagePath;
   final bool showLottie;
   final ValueChanged<bool> onSelected;
+  final bool startUnblurred;
 
   const GuiltyPleasureCard({
     super.key,
@@ -19,6 +20,7 @@ class GuiltyPleasureCard extends StatefulWidget {
     required this.imagePath,
     this.showLottie = false,
     required this.onSelected,
+    this.startUnblurred = false,
   });
 
   @override
@@ -27,9 +29,32 @@ class GuiltyPleasureCard extends StatefulWidget {
 
 class _GuiltyPleasureCardState extends State<GuiltyPleasureCard>
     with AutomaticKeepAliveClientMixin {
-  double _blurSigma = 20.0; // Start with heavy blur
+  late double _blurSigma;
+
+  @override
+  void initState() {
+    super.initState();
+    _blurSigma = widget.startUnblurred ? 0.0 : 20.0;
+
+    if (widget.showLottie) {
+      _showLottie = true;
+      // Hide Lottie after 4 seconds
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted) {
+          setState(() {
+            _showLottie = false;
+          });
+        }
+      });
+    }
+  }
 
   void _handleTap() {
+    // If started unblurred (read-only mode essentially), maybe we disable tap?
+    // User said "preview" so likely read only. But let's keep interactions minimal if unblurred.
+    // If startUnblurred is true, we might want to prevent re-blurring.
+    if (widget.startUnblurred) return;
+
     setState(() {
       if (_blurSigma == 0.0) {
         // If fully unblurred, reset back to blurred (deselect)
@@ -60,21 +85,6 @@ class _GuiltyPleasureCardState extends State<GuiltyPleasureCard>
   bool _showLottie = false;
 
   @override
-  void initState() {
-    super.initState();
-    if (widget.showLottie) {
-      _showLottie = true;
-      // Hide Lottie after 4 seconds
-      Future.delayed(const Duration(seconds: 3), () {
-        if (mounted) {
-          setState(() {
-            _showLottie = false;
-          });
-        }
-      });
-    }
-  }
-
   @override
   bool get wantKeepAlive => true;
 

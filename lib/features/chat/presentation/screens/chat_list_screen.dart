@@ -79,9 +79,9 @@ class ChatListScreen extends StatelessWidget {
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       leading: CircleAvatar(
         radius: 28,
-        backgroundColor: isTeam ? AppColors.primary : Colors.grey[800],
+        backgroundColor: isTeam ? AppColors.buttonBackground : Colors.grey[800],
         child: isTeam
-            ? Image.asset(avatar, width: 32, height: 32)
+            ? Image.asset(avatar, width: 42, height: 42)
             : const Icon(Icons.person, color: Colors.white54),
       ),
       title: Text(

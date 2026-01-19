@@ -1,10 +1,15 @@
+import 'dart:async';
+
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../widgets/animated_gradient_button.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../widgets/guilty_pleasure_card.dart';
 import '../../../../widgets/dashed_border_painter.dart';
 import '../../../../widgets/gradient_app_bar.dart';
+import '../../../../widgets/full_screen_image_viewer.dart';
 import '../../../../data/guilty_pleasures_data.dart';
 import '../widgets/about_me_modal.dart';
 
@@ -16,26 +21,81 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen>
-    with SingleTickerProviderStateMixin {
+class _ProfileScreenState extends State<ProfileScreen> {
   bool isMale = true;
   String _biography = '';
   String? _audioPath;
-  late AnimationController _gradientController;
+  bool _isPlaying = false;
+  int _playbackSeconds = 0;
+  int _totalDurationSeconds = 0;
+  Timer? _playbackTimer;
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
   void initState() {
     super.initState();
-    _gradientController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat();
+    _audioPlayer.onPlayerComplete.listen((_) {
+      if (mounted) {
+        _stopPlayback();
+      }
+    });
   }
 
   @override
   void dispose() {
-    _gradientController.dispose();
+    _audioPlayer.dispose();
+    _playbackTimer?.cancel();
     super.dispose();
+  }
+
+  Future<void> _playRecording() async {
+    if (_audioPath == null) return;
+
+    // Use DeviceFileSource for local files
+    await _audioPlayer.play(DeviceFileSource(_audioPath!));
+    setState(() {
+      _isPlaying = true;
+      _playbackSeconds = 0;
+    });
+
+    _playbackTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          _playbackSeconds++;
+        });
+      }
+    });
+  }
+
+  Future<void> _stopPlayback() async {
+    await _audioPlayer.stop();
+    _playbackTimer?.cancel();
+    if (mounted) {
+      setState(() {
+        _isPlaying = false;
+        _playbackSeconds = 0;
+      });
+    }
+  }
+
+  Future<void> _deleteRecording() async {
+    // Optional: Delete the file from filesystem if needed, but for now just clear path
+    // final file = File(_audioPath!);
+    // if (await file.exists()) {
+    //   await file.delete();
+    // }
+
+    _stopPlayback();
+
+    setState(() {
+      _audioPath = null;
+    });
+  }
+
+  String _formatDuration(int seconds) {
+    final mins = seconds ~/ 60;
+    final secs = seconds % 60;
+    return '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
   }
 
   @override
@@ -131,59 +191,27 @@ class _ProfileScreenState extends State<ProfileScreen>
               ),
             ),
 
-            // BE VISIBLE Button - Fixed at bottom
+            // UNBLUR Button - Fixed at bottom
             Positioned(
               left: 16,
               right: 16,
               bottom: MediaQuery.of(context).padding.bottom + 16,
-              child: AnimatedBuilder(
-                animation: _gradientController,
-                builder: (context, child) {
-                  return Container(
-                    height: 52,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(26),
-                      gradient: LinearGradient(
-                        colors: [
-                          AppColors.primary,
-                          AppColors.primaryDark,
-                          AppColors.primary,
-                        ],
-                        stops: [0.0, _gradientController.value, 1.0],
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withOpacity(0.4),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () {
-                          // TODO: Implement BE VISIBLE action
-                        },
-                        borderRadius: BorderRadius.circular(26),
-                        child: const Center(
-                          child: Text(
-                            'BE VISIBLE',
-                            style: TextStyle(
-                              fontFamily: 'RobotoSlab',
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                              letterSpacing: 1.5,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
+              child: AnimatedGradientButton(
+                onPressed: () {
+                  context.push('/paywall');
                 },
+                borderRadius: BorderRadius.circular(4),
+                height: 56,
+                child: const Text(
+                  'UNBLUR',
+                  style: TextStyle(
+                    fontFamily: 'RobotoSlab',
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                    letterSpacing: 1.5,
+                  ),
+                ),
               ),
             ),
           ],
@@ -203,41 +231,65 @@ class _ProfileScreenState extends State<ProfileScreen>
             alignment: Alignment.bottomCenter,
             clipBehavior: Clip.none,
             children: [
-              Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
-                ),
-                child: CircleAvatar(
-                  radius: 72,
-                  backgroundImage: AssetImage(
-                    isMale
-                        ? 'assets/images/male_avatar.png'
-                        : 'assets/images/female_avatar.png',
+              GestureDetector(
+                onTap: () {
+                  FullScreenImageViewer.show(
+                    context,
+                    imageProvider: AssetImage(
+                      isMale
+                          ? 'assets/images/male_avatar.png'
+                          : 'assets/images/female_avatar.png',
+                    ),
+                    heroTag: 'profile_photo',
+                  );
+                },
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
                   ),
-                  backgroundColor: Colors.grey,
+                  child: Hero(
+                    tag: 'profile_photo',
+                    child: CircleAvatar(
+                      radius: 72,
+                      backgroundImage: AssetImage(
+                        isMale
+                            ? 'assets/images/male_avatar.png'
+                            : 'assets/images/female_avatar.png',
+                      ),
+                      backgroundColor: Colors.grey,
+                    ),
+                  ),
                 ),
               ),
               Positioned(
                 bottom: 0,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.buttonBackground,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white, width: 2),
-                  ),
-                  child: const Text(
-                    "Scorpio ♏",
-                    style: TextStyle(
-                      fontFamily: 'RobotoSlab',
-                      color: Colors.black87,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
+                child: GestureDetector(
+                  onTap: () {
+                    context.push('/preview-profile');
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.backgroundDark,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.buttonBackground,
+                        width: 1,
+                      ),
+                    ),
+                    child: const Text(
+                      'Preview Profile',
+                      style: TextStyle(
+                        fontFamily: 'RobotoSlab',
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.buttonBackground,
+                      ),
                     ),
                   ),
                 ),
@@ -250,6 +302,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const SizedBox(height: 14),
                 Text(
                   "joined 7 hours ago",
                   style: TextStyle(
@@ -258,7 +311,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                     fontSize: 12,
                   ),
                 ),
-                SizedBox(height: 4),
+                SizedBox(height: 6),
                 Text(
                   "Gallant Explorer",
                   style: TextStyle(
@@ -268,7 +321,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                SizedBox(height: 4),
+                SizedBox(height: 6),
                 Text(
                   "Near Ankara",
                   style: TextStyle(
@@ -277,7 +330,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                     fontSize: 14,
                   ),
                 ),
-                SizedBox(height: 2),
+                SizedBox(height: 4),
                 Text(
                   "Male, Straight, 5.9 ft",
                   style: TextStyle(
@@ -286,43 +339,14 @@ class _ProfileScreenState extends State<ProfileScreen>
                     fontSize: 14,
                   ),
                 ),
-                SizedBox(height: 2),
-                Row(
-                  children: [
-                    Text(
-                      "18 years",
-                      style: TextStyle(
-                        fontFamily: 'RobotoSlab',
-                        color: Colors.white,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const Spacer(),
-                    // Preview Profile Button - aligned with Scorpio
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.backgroundDark,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppColors.buttonBackground,
-                          width: 1,
-                        ),
-                      ),
-                      child: const Text(
-                        'Preview Profile',
-                        style: TextStyle(
-                          fontFamily: 'RobotoSlab',
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.buttonBackground,
-                        ),
-                      ),
-                    ),
-                  ],
+                SizedBox(height: 4),
+                Text(
+                  "18 years, Scorpio ♏",
+                  style: TextStyle(
+                    fontFamily: 'RobotoSlab',
+                    color: Colors.white,
+                    fontSize: 14,
+                  ),
                 ),
               ],
             ),
@@ -340,6 +364,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
+        // Only open modal if tapping outside interactive elements or if no audio
         onTap: _showAboutMeModal,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -357,7 +382,9 @@ class _ProfileScreenState extends State<ProfileScreen>
             Stack(
               children: [
                 Positioned.fill(
-                  child: CustomPaint(painter: DashedBorderPainter()),
+                  child: CustomPaint(
+                    painter: DashedBorderPainter(borderRadius: 4.0),
+                  ),
                 ),
                 Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -381,42 +408,92 @@ class _ProfileScreenState extends State<ProfileScreen>
                       // Audio Row
                       Row(
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: hasAudio
-                                  ? AppColors.primary.withOpacity(0.2)
-                                  : Colors.white.withOpacity(0.1),
-                            ),
-                            child: Icon(
-                              hasAudio ? Icons.play_arrow : Icons.mic,
-                              color: hasAudio
-                                  ? AppColors.primary
-                                  : Colors.white,
-                              size: 24,
+                          GestureDetector(
+                            onTap: () {
+                              if (hasAudio) {
+                                if (_isPlaying) {
+                                  _stopPlayback();
+                                } else {
+                                  _playRecording();
+                                }
+                              } else {
+                                _showAboutMeModal();
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: hasAudio
+                                    ? AppColors.primary.withOpacity(0.2)
+                                    : Colors.white.withOpacity(0.1),
+                              ),
+                              child: Icon(
+                                hasAudio
+                                    ? (_isPlaying
+                                          ? Icons.stop
+                                          : Icons.play_arrow)
+                                    : Icons.mic,
+                                color: hasAudio
+                                    ? AppColors.primary
+                                    : Colors.white,
+                                size: 24,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 12),
-                          Text(
-                            hasAudio
-                                ? "Voice intro recorded"
-                                : "Record audio intro",
-                            style: TextStyle(
-                              fontFamily: 'RobotoSlab',
-                              color: hasAudio
-                                  ? AppColors.primary
-                                  : Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
+                          SizedBox(
+                            height: 40, // Fixed height to prevent layout shift
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  hasAudio
+                                      ? (_isPlaying
+                                            ? "Playing..."
+                                            : "Voice intro recorded")
+                                      : "Record audio intro",
+                                  style: TextStyle(
+                                    fontFamily: 'RobotoSlab',
+                                    color: hasAudio
+                                        ? AppColors.primary
+                                        : Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                                if (_isPlaying) ...[
+                                  Text(
+                                    _formatDuration(_playbackSeconds),
+                                    style: TextStyle(
+                                      fontFamily: 'RobotoSlab',
+                                      fontSize: 12,
+                                      color: Colors.white.withOpacity(0.5),
+                                    ),
+                                  ),
+                                ] else if (hasAudio) ...[
+                                  Text(
+                                    _formatDuration(_totalDurationSeconds),
+                                    style: TextStyle(
+                                      fontFamily: 'RobotoSlab',
+                                      fontSize: 12,
+                                      color: Colors.white.withOpacity(0.5),
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
                           ),
                           if (hasAudio) ...[
                             const Spacer(),
-                            Icon(
-                              Icons.check_circle,
-                              color: AppColors.success,
-                              size: 20,
+                            GestureDetector(
+                              onTap: _deleteRecording,
+                              child: Icon(
+                                Icons.delete_outline,
+                                color: Colors.white.withOpacity(0.5),
+                                size: 22,
+                              ),
                             ),
                           ],
                         ],
@@ -433,6 +510,9 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   void _showAboutMeModal() {
+    // If playing, stop before opening modal
+    if (_isPlaying) _stopPlayback();
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -441,10 +521,15 @@ class _ProfileScreenState extends State<ProfileScreen>
       builder: (context) => AboutMeModal(
         initialBio: _biography,
         initialAudioPath: _audioPath,
-        onSave: (bio, audioPath) {
+        onSave: (bio, audioPath, duration) {
           setState(() {
             _biography = bio;
             _audioPath = audioPath;
+            if (duration != null) {
+              _totalDurationSeconds = duration;
+            } else if (audioPath == null) {
+              _totalDurationSeconds = 0;
+            }
           });
         },
       ),
@@ -467,31 +552,32 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Widget _buildPrivateTab() {
-    return Column(
-      children: [
-        Expanded(
-          child: GridView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+    return CustomScrollView(
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          sliver: SliverGrid(
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
               crossAxisSpacing: 8,
               mainAxisSpacing: 8,
             ),
-            itemCount: 1,
-            itemBuilder: (context, index) {
+            delegate: SliverChildBuilderDelegate((context, index) {
               return _buildAddPhotoButton();
-            },
+            }, childCount: 1),
           ),
         ),
-        const Padding(
-          padding: EdgeInsets.fromLTRB(32, 0, 32, 120),
-          child: Text(
-            "Only people you approve can see your private photos.",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: 'RobotoSlab',
-              color: Colors.white54,
-              fontSize: 14,
+        const SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(32, 24, 32, 100),
+            child: Text(
+              "Only people you approve can see your private photos.",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'RobotoSlab',
+                color: Colors.white54,
+                fontSize: 14,
+              ),
             ),
           ),
         ),
@@ -528,7 +614,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(4),
           border: Border.all(color: Colors.white24),
         ),
         child: const Center(

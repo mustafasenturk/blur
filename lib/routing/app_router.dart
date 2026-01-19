@@ -11,6 +11,10 @@ import '../features/profile/presentation/screens/profile_screen.dart';
 import '../features/profile/presentation/screens/edit_profile_screen.dart';
 import '../features/settings/presentation/screens/settings_screen.dart';
 import '../features/match/presentation/screens/match_screen.dart';
+import '../features/settings/presentation/screens/linked_accounts_screen.dart';
+import '../features/settings/presentation/screens/notifications_screen.dart';
+import '../features/profile/presentation/screens/preview_profile_screen.dart';
+import '../features/subscription/presentation/screens/paywall_screen.dart';
 import '../widgets/main_scaffold.dart';
 
 part 'routes.dart';
@@ -50,6 +54,32 @@ CustomTransitionPage<T> _buildTransitionPage<T>({
           ).animate(curvedAnimation),
           child: child,
         ),
+      );
+    },
+  );
+}
+
+/// Modal page transition (Bottom to Top)
+CustomTransitionPage<T> _buildModalTransitionPage<T>({
+  required LocalKey key,
+  required Widget child,
+}) {
+  return CustomTransitionPage<T>(
+    key: key,
+    transitionDuration: const Duration(milliseconds: 400),
+    reverseTransitionDuration: const Duration(milliseconds: 350),
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      final curvedAnimation = CurvedAnimation(
+        parent: animation,
+        curve: Curves.fastOutSlowIn,
+      );
+      return SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 1),
+          end: Offset.zero,
+        ).animate(curvedAnimation),
+        child: child,
       );
     },
   );
@@ -155,6 +185,22 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           key: state.pageKey,
           child: const SettingsScreen(),
         ),
+        routes: [
+          GoRoute(
+            path: 'notifications',
+            pageBuilder: (context, state) => _buildTransitionPage(
+              key: state.pageKey,
+              child: const NotificationsScreen(),
+            ),
+          ),
+          GoRoute(
+            path: 'linked-accounts',
+            pageBuilder: (context, state) => _buildTransitionPage(
+              key: state.pageKey,
+              child: const LinkedAccountsScreen(),
+            ),
+          ),
+        ],
       ),
 
       // Edit Profile (pushed on top, overlays bottom nav)
@@ -165,6 +211,26 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => _buildTransitionPage(
           key: state.pageKey,
           child: const EditProfileScreen(),
+        ),
+      ),
+
+      // Preview Profile (pushed on top)
+      GoRoute(
+        path: '/preview-profile',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) => _buildTransitionPage(
+          key: state.pageKey,
+          child: const PreviewProfileScreen(),
+        ),
+      ),
+
+      // Paywall (Bottom to Top Modal)
+      GoRoute(
+        path: '/paywall',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) => _buildModalTransitionPage(
+          key: state.pageKey,
+          child: const PaywallScreen(),
         ),
       ),
     ],

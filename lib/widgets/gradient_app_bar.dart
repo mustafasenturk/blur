@@ -57,7 +57,16 @@ class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
               ),
               child: leading,
             )
-          : null,
+          : (showBackButton
+                ? IconButton(
+                    icon: const Icon(
+                      Icons.chevron_left,
+                      color: Colors.white,
+                      size: 36,
+                    ),
+                    onPressed: () => Navigator.maybePop(context),
+                  )
+                : null),
       title:
           titleWidget ??
           (title != null

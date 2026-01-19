@@ -12,7 +12,7 @@ class DashedBorderPainter extends CustomPainter {
     this.strokeWidth = 1.0,
     this.dashWidth = 5.0,
     this.dashSpace = 5.0,
-    this.borderRadius = 12.0,
+    this.borderRadius = 4.0,
   });
 
   @override
