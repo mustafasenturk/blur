@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../theme/app_colors.dart';
 import 'dart:math';
 
@@ -300,7 +301,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             child: TextButton(
               onPressed: () {
                 // TODO: Implement save logic
-                Navigator.pop(context);
+                context.pop();
               },
               child: const Text(
                 'Done',

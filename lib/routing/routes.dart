@@ -15,7 +15,7 @@ abstract class AppRoutes {
   // Overlay routes
   static const String editProfile = '/edit-profile';
   static const String settings = '/settings';
-  static const String chatDetail = '/chat/:userId';
+  static const String chatDetail = '/chat/:odaId';
 }
 
 /// Extension for easy navigation

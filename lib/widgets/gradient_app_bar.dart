@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:blur/theme/app_colors.dart';
 
 class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -64,7 +65,7 @@ class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
                       color: Colors.white,
                       size: 36,
                     ),
-                    onPressed: () => Navigator.maybePop(context),
+                    onPressed: () => context.pop(),
                   )
                 : null),
       title:

@@ -99,6 +99,8 @@ class _AboutMeModalState extends State<AboutMeModal>
       path: path,
     );
 
+    if (!mounted) return;
+
     setState(() {
       _isRecording = true;
       _recordingSeconds = 0;
@@ -119,6 +121,8 @@ class _AboutMeModalState extends State<AboutMeModal>
     _recordingTimer?.cancel();
     final path = await _recorder.stop();
 
+    if (!mounted) return;
+
     setState(() {
       _isRecording = false;
       _recordedAudioPath = path;
@@ -133,6 +137,8 @@ class _AboutMeModalState extends State<AboutMeModal>
       }
     }
 
+    if (!mounted) return;
+
     setState(() {
       _recordedAudioPath = null;
       _recordingSeconds = 0;
@@ -144,12 +150,18 @@ class _AboutMeModalState extends State<AboutMeModal>
 
     await _audioPlayer.play(DeviceFileSource(_recordedAudioPath!));
 
+    if (!mounted) return;
+
     setState(() {
       _isPlaying = true;
       _playbackSeconds = 0;
     });
 
     _playbackTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
       setState(() {
         _playbackSeconds++;
       });

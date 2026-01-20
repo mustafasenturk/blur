@@ -15,6 +15,7 @@ import '../features/settings/presentation/screens/linked_accounts_screen.dart';
 import '../features/settings/presentation/screens/notifications_screen.dart';
 import '../features/profile/presentation/screens/preview_profile_screen.dart';
 import '../features/subscription/presentation/screens/paywall_screen.dart';
+import '../features/chat/presentation/screens/chat_detail_screen.dart';
 import '../widgets/main_scaffold.dart';
 
 part 'routes.dart';
@@ -222,6 +223,19 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           key: state.pageKey,
           child: const PreviewProfileScreen(),
         ),
+      ),
+
+      // Chat Detail (pushed on top, overlays bottom nav)
+      GoRoute(
+        path: '/chat/:odaId',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) {
+          final odaId = state.pathParameters['odaId'] ?? '';
+          return _buildTransitionPage(
+            key: state.pageKey,
+            child: ChatDetailScreen(odaId: odaId),
+          );
+        },
       ),
 
       // Paywall (Bottom to Top Modal)

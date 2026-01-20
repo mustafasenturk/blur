@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../theme/app_colors.dart';
 import '../../../../widgets/gradient_app_bar.dart';
@@ -18,14 +19,13 @@ class ChatListScreen extends StatelessWidget {
           children: [
             // TEAM BLUR Message
             _buildChatTile(
+              context: context,
+              odaId: 'blur-team',
               avatar: 'assets/icons/logo_transparent.png',
               name: 'Blur Team',
               lastMessage: '🌟 Welcome to Blur! 🌟',
               time: '6 hours ago',
               isTeam: true,
-              onTap: () {
-                // TODO: Open Team Chat
-              },
             ),
 
             // Empty state or more chats
@@ -67,15 +67,16 @@ class ChatListScreen extends StatelessWidget {
   }
 
   Widget _buildChatTile({
+    required BuildContext context,
+    required String odaId,
     required String avatar,
     required String name,
     required String lastMessage,
     required String time,
     bool isTeam = false,
-    required VoidCallback onTap,
   }) {
     return ListTile(
-      onTap: onTap,
+      onTap: () => context.push('/chat/$odaId'),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       leading: CircleAvatar(
         radius: 28,

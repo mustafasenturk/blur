@@ -231,7 +231,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                               _buildSubscriptionOption(
                                 index: 0,
                                 title: 'Weekly',
-                                price: '\$4.99 / Week',
+                                priceAmount: '\$4.99',
+                                pricePeriod: '/ week',
                                 tag: 'BESTSELLER',
                                 isTagDark: true,
                               ),
@@ -239,14 +240,18 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                               _buildSubscriptionOption(
                                 index: 1,
                                 title: 'Monthly',
-                                price: '\$9.99 / Month',
+                                priceAmount: '\$9.99',
+                                pricePeriod: '/ month',
+                                discount: '50% OFF',
                                 tag: null,
                               ),
                               const SizedBox(height: 12),
                               _buildSubscriptionOption(
                                 index: 2,
                                 title: '3 Months',
-                                price: '\$19.99 / 3 Months',
+                                priceAmount: '\$19.99',
+                                pricePeriod: '/ 3 months',
+                                discount: '67% OFF',
                                 tag: 'CHEAPEST',
                                 isTagDark: false,
                               ),
@@ -446,8 +451,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
   Widget _buildSubscriptionOption({
     required int index,
     required String title,
-    required String price,
+    required String priceAmount,
+    required String pricePeriod,
     String? tag,
+    String? discount,
     bool isTagDark = true,
   }) {
     final isSelected = _selectedPackageIndex == index;
@@ -463,7 +470,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
         children: [
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
             decoration: BoxDecoration(
               color: isSelected
                   ? Colors.black.withOpacity(0.6)
@@ -485,25 +492,55 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Text(
-                  price,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    RichText(
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                            text: priceAmount,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          TextSpan(
+                            text: ' $pricePeriod',
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      discount ?? ' ',
+                      style: TextStyle(
+                        color: discount != null
+                            ? AppColors.primary
+                            : Colors.transparent,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
           if (tag != null)
             Positioned(
-              top: -10,
+              top: -9,
               right: 12, // Margin right 12
               child: Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
-                  vertical: 4,
+                  vertical: 2,
                 ),
                 decoration: BoxDecoration(
                   color: isTagDark

@@ -6,7 +6,9 @@ import '../utils/logger.dart';
 
 /// Provider for connectivity status
 final connectivityProvider = StreamProvider<ConnectivityResult>((ref) {
-  return Connectivity().onConnectivityChanged.map((results) => results.first);
+  return Connectivity().onConnectivityChanged.map(
+    (results) => results.isNotEmpty ? results.first : ConnectivityResult.none,
+  );
 });
 
 /// Provider for checking if device is online
@@ -38,11 +40,13 @@ class ConnectivityService {
   Future<void> initialize() async {
     // Check initial status
     final results = await _connectivity.checkConnectivity();
-    _updateStatus(results.first);
+    _updateStatus(results.isNotEmpty ? results.first : ConnectivityResult.none);
 
     // Listen for changes
     _subscription = _connectivity.onConnectivityChanged.listen((results) {
-      _updateStatus(results.first);
+      _updateStatus(
+        results.isNotEmpty ? results.first : ConnectivityResult.none,
+      );
     });
   }
 
@@ -59,7 +63,7 @@ class ConnectivityService {
   /// Check current connectivity status
   Future<bool> checkConnectivity() async {
     final results = await _connectivity.checkConnectivity();
-    _updateStatus(results.first);
+    _updateStatus(results.isNotEmpty ? results.first : ConnectivityResult.none);
     return _isOnline;
   }
 
