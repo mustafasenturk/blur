@@ -9,21 +9,29 @@ import 'package:blur/widgets/dashed_border_painter.dart';
 import 'package:blur/widgets/gradient_app_bar.dart';
 import 'package:blur/widgets/full_screen_image_viewer.dart';
 import 'package:blur/data/guilty_pleasures_data.dart';
+import 'package:go_router/go_router.dart';
 
-/// Preview Profile screen - Read-only view of the profile
-class PreviewProfileScreen extends StatefulWidget {
-  const PreviewProfileScreen({super.key});
+/// Other User Profile screen - View another user's profile with actions
+class OtherUserProfileScreen extends StatefulWidget {
+  final String username;
+  final String? userId;
+
+  const OtherUserProfileScreen({
+    super.key,
+    required this.username,
+    this.userId,
+  });
 
   @override
-  State<PreviewProfileScreen> createState() => _PreviewProfileScreenState();
+  State<OtherUserProfileScreen> createState() => _OtherUserProfileScreenState();
 }
 
-class _PreviewProfileScreenState extends State<PreviewProfileScreen> {
+class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
   // Mock data to match ProfileScreen defaults
-  final bool isMale = true;
+  final bool isMale = true; // Could be passed in or fetched
   final String _biography =
-      "I'm a Gallant Explorer looking for new adventures."; // Mock bio for preview
-  String? _audioPath = 'mock_audio'; // Mock audio presence
+      "I'm a Gallant Explorer looking for new adventures. I love hiking, photography, and good coffee.";
+  String? _audioPath = 'mock_audio';
   bool _isPlaying = false;
   int _playbackSeconds = 0;
   final int _totalDurationSeconds = 15;
@@ -106,68 +114,168 @@ class _PreviewProfileScreenState extends State<PreviewProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3, // Now includes Private
+      length: 3,
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        appBar: const GradientAppBar(
-          title: 'Preview Profile',
+        appBar: GradientAppBar(
+          title: widget.username,
           showBackButton: true,
-        ),
-        body: NestedScrollView(
-          headerSliverBuilder: (context, innerBoxIsScrolled) => [
-            SliverToBoxAdapter(
-              child: Column(
-                children: [
-                  _buildProfileHeader(),
-                  const SizedBox(height: 24),
-                  if (_biography.isNotEmpty || _audioPath != null)
-                    _buildAboutMeSection(),
-                ],
-              ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.call, color: Colors.white),
+              onPressed: () {
+                context.pushNamed(
+                  'call_screen',
+                  queryParameters: {
+                    'username': widget.username,
+                    'isIncoming': 'false',
+                  },
+                );
+              },
             ),
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: _TabBarDelegate(
-                TabBar(
-                  indicator: const UnderlineTabIndicator(
-                    borderSide: BorderSide(
-                      width: 3.0,
-                      color: AppColors.primary,
-                    ),
-                    insets: EdgeInsets.symmetric(horizontal: 16.0),
+            IconButton(
+              icon: const Icon(Icons.more_vert, color: Colors.white),
+              onPressed: () => _showOptionsSheet(context),
+            ),
+          ],
+        ),
+        body: Stack(
+          children: [
+            NestedScrollView(
+              headerSliverBuilder: (context, innerBoxIsScrolled) => [
+                SliverToBoxAdapter(
+                  child: Column(
+                    children: [
+                      _buildProfileHeader(),
+                      const SizedBox(height: 24),
+                      if (_biography.isNotEmpty || _audioPath != null)
+                        _buildAboutMeSection(),
+                    ],
                   ),
-                  indicatorSize: TabBarIndicatorSize.tab,
-                  labelColor: Colors.white,
-                  unselectedLabelColor: Colors.white54,
-                  labelStyle: const TextStyle(
-                    fontFamily: 'RobotoSlab',
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
+                ),
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _TabBarDelegate(
+                    TabBar(
+                      indicator: const UnderlineTabIndicator(
+                        borderSide: BorderSide(
+                          width: 3.0,
+                          color: AppColors.primary,
+                        ),
+                        insets: EdgeInsets.symmetric(horizontal: 16.0),
+                      ),
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      labelColor: Colors.white,
+                      unselectedLabelColor: Colors.white54,
+                      labelStyle: const TextStyle(
+                        fontFamily: 'RobotoSlab',
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      tabs: const [
+                        Tab(
+                          icon: Icon(Icons.grid_view_rounded, size: 24),
+                          text: "PHOTOS",
+                        ),
+                        Tab(
+                          icon: Icon(Icons.lock_clock_outlined, size: 24),
+                          text: "PRIVATE",
+                        ),
+                        Tab(
+                          icon: Icon(Icons.favorite_border_rounded, size: 24),
+                          text: "INTEREST",
+                        ),
+                      ],
+                    ),
                   ),
-                  tabs: const [
-                    Tab(
-                      icon: Icon(Icons.grid_view_rounded, size: 24),
-                      text: "PHOTOS",
-                    ),
-                    Tab(
-                      icon: Icon(Icons.lock_clock_outlined, size: 24),
-                      text: "PRIVATE",
-                    ),
-                    Tab(
-                      icon: Icon(Icons.favorite_border_rounded, size: 24),
-                      text: "INTEREST",
-                    ),
+                ),
+              ],
+              body: Padding(
+                padding: const EdgeInsets.only(
+                  bottom: 90,
+                ), // Space for bottom bar
+                child: TabBarView(
+                  children: [
+                    _buildPhotosTab(),
+                    _buildPrivateTab(),
+                    _buildInterestsTab(),
                   ],
                 ),
               ),
             ),
+
+            // Bottom Action Bar
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: AppColors.backgroundDark,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.backgroundDark,
+                      blurRadius: 40,
+                      offset: Offset(0, -40),
+                    ),
+                  ],
+                ),
+                padding: EdgeInsets.only(
+                  left: 16,
+                  right: 16,
+                  top: 0,
+                  bottom: MediaQuery.of(context).padding.bottom + 16,
+                ),
+                child: _buildActionButton(
+                  label: "MESSAGE",
+                  color: AppColors.primary,
+                  textColor: Colors.black87,
+                  onTap: () {
+                    if (GoRouter.of(context)
+                        .routerDelegate
+                        .currentConfiguration
+                        .uri
+                        .toString()
+                        .contains('/chat/')) {
+                      context.pop();
+                    } else {
+                      context.push('/chat/${widget.userId ?? "1"}');
+                    }
+                  },
+                ),
+              ),
+            ),
           ],
-          body: TabBarView(
-            children: [
-              _buildPhotosTab(),
-              _buildPrivateTab(),
-              _buildInterestsTab(),
-            ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required String label,
+    required Color color,
+    required Color textColor,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 56,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(4),
+          // Shadow moved to parent container as requested
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontFamily: 'RobotoSlab',
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: textColor,
+              letterSpacing: 1.0,
+            ),
           ),
         ),
       ),
@@ -190,7 +298,7 @@ class _PreviewProfileScreenState extends State<PreviewProfileScreen> {
                       ? 'assets/images/male_avatar.png'
                       : 'assets/images/female_avatar.png',
                 ),
-                heroTag: 'preview_profile_photo',
+                heroTag: 'other_profile_photo',
               );
             },
             child: Container(
@@ -200,7 +308,7 @@ class _PreviewProfileScreenState extends State<PreviewProfileScreen> {
                 border: Border.all(color: Colors.white, width: 2),
               ),
               child: Hero(
-                tag: 'preview_profile_photo',
+                tag: 'other_profile_photo',
                 child: CircleAvatar(
                   radius: 72,
                   backgroundImage: AssetImage(
@@ -221,7 +329,7 @@ class _PreviewProfileScreenState extends State<PreviewProfileScreen> {
               children: [
                 const SizedBox(height: 14),
                 const Text(
-                  "joined 7 hours ago",
+                  "joined 3 hours ago",
                   style: TextStyle(
                     fontFamily: 'RobotoSlab',
                     color: AppColors.secondary,
@@ -229,9 +337,9 @@ class _PreviewProfileScreenState extends State<PreviewProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 6),
-                const Text(
-                  "Gallant Explorer",
-                  style: TextStyle(
+                Text(
+                  widget.username,
+                  style: const TextStyle(
                     fontFamily: 'RobotoSlab',
                     color: Colors.white,
                     fontSize: 22,
@@ -258,7 +366,7 @@ class _PreviewProfileScreenState extends State<PreviewProfileScreen> {
                 ),
                 const SizedBox(height: 4),
                 const Text(
-                  "18 years, Scorpio ♏",
+                  "24 years, Leo ♌",
                   style: TextStyle(
                     fontFamily: 'RobotoSlab',
                     color: Colors.white,
@@ -376,43 +484,39 @@ class _PreviewProfileScreenState extends State<PreviewProfileScreen> {
   }
 
   Widget _buildPhotosTab() {
-    // Read-only view likely won't have empty state with "Add Photo" button
-    // It should show photos if they exist, or maybe a "No photos yet" text.
-    // Since we don't have real photos, I'll show a placeholder image or empty state.
-
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.photo_library_outlined,
-            size: 48,
-            color: Colors.white.withOpacity(0.3),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            "No public photos yet",
-            style: TextStyle(
-              fontFamily: 'RobotoSlab',
-              color: Colors.white.withOpacity(0.5),
-              fontSize: 16,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPrivateTab() {
-    // Show mock private photos for preview, blurred as requested
+    // Mock photos
     return GridView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+      padding: const EdgeInsets.all(16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
         crossAxisSpacing: 8,
         mainAxisSpacing: 8,
       ),
-      itemCount: 3, // Mock a few private photos
+      itemCount: 6,
+      itemBuilder: (context, index) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+            image: const DecorationImage(
+              image: AssetImage('assets/images/male_avatar.png'), // Placeholder
+              fit: BoxFit.cover,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPrivateTab() {
+    return GridView.builder(
+      padding: const EdgeInsets.all(16),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
+      ),
+      itemCount: 6,
       itemBuilder: (context, index) {
         return Stack(
           fit: StackFit.expand,
@@ -428,7 +532,7 @@ class _PreviewProfileScreenState extends State<PreviewProfileScreen> {
                 ),
               ),
             ),
-            // Lock Overlay (Optional for preview, but asked to be "same way")
+            // Lock Overlay
             Container(
               decoration: BoxDecoration(
                 color: Colors.black.withOpacity(0.3),
@@ -449,8 +553,13 @@ class _PreviewProfileScreenState extends State<PreviewProfileScreen> {
   }
 
   Widget _buildInterestsTab() {
-    // Mock selected interests for preview
-    final selectedTitles = ['Dirty Talk', 'Cuddling', 'Eye Contact'];
+    // Mock selected interests
+    final selectedTitles = [
+      'Dirty Talk',
+      'Cuddling',
+      'Eye Contact',
+      'Roleplay',
+    ];
     final selectedInterests = guiltyPleasuresData
         .where((item) => selectedTitles.contains(item['title']))
         .toList();
@@ -471,10 +580,88 @@ class _PreviewProfileScreenState extends State<PreviewProfileScreen> {
           description: item['description']!,
           imagePath: item['image']!,
           showLottie: false,
-          onSelected: (isSelected) {}, // Read-only
-          startUnblurred: true, // Always show content
+          onSelected: (isSelected) {},
+          startUnblurred: true,
         );
       },
+    );
+  }
+
+  void _showOptionsSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: AppColors.backgroundDark,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'User Options',
+                  style: TextStyle(
+                    fontFamily: 'RobotoSlab',
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: const Icon(Icons.close, color: Colors.white, size: 24),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            ListTile(
+              leading: const Icon(Icons.flag_outlined, color: Colors.white),
+              title: const Text(
+                'Report User',
+                style: TextStyle(color: Colors.white, fontFamily: 'RobotoSlab'),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                // Trigger report flow
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Report flow not implemented yet"),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(
+                Icons.block_outlined,
+                color: Colors.redAccent,
+              ),
+              title: const Text(
+                'Block User',
+                style: TextStyle(
+                  color: Colors.redAccent,
+                  fontFamily: 'RobotoSlab',
+                ),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                // Trigger block flow
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Block flow not implemented yet"),
+                  ),
+                );
+              },
+            ),
+            SizedBox(height: MediaQuery.of(context).padding.bottom + 10),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -422,11 +422,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
               duration: const Duration(milliseconds: 500),
               child: IconButton(
                 onPressed: () => Navigator.of(context).pop(),
-                icon: const Icon(
-                  Icons.close,
-                  color: AppColors.primary,
-                  size: 24,
-                ),
+                icon: const Icon(Icons.close, color: Colors.white, size: 24),
               ),
             ),
           ),
@@ -470,7 +466,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
         children: [
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+            padding: EdgeInsets.symmetric(
+              vertical: discount == null ? 23.5 : 16,
+              horizontal: 20,
+            ),
             decoration: BoxDecoration(
               color: isSelected
                   ? Colors.black.withOpacity(0.6)
@@ -517,17 +516,17 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                         ],
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      discount ?? ' ',
-                      style: TextStyle(
-                        color: discount != null
-                            ? AppColors.primary
-                            : Colors.transparent,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
+                    if (discount != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        discount,
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ],

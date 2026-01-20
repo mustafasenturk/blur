@@ -323,7 +323,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 SizedBox(height: 6),
                 Text(
-                  "Near Ankara",
+                  "Ankara",
                   style: TextStyle(
                     fontFamily: 'RobotoSlab',
                     color: Colors.white,

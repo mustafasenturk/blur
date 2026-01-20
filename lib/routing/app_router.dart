@@ -16,6 +16,8 @@ import '../features/settings/presentation/screens/notifications_screen.dart';
 import '../features/profile/presentation/screens/preview_profile_screen.dart';
 import '../features/subscription/presentation/screens/paywall_screen.dart';
 import '../features/chat/presentation/screens/chat_detail_screen.dart';
+import '../features/profile/presentation/screens/other_user_profile_screen.dart';
+import '../features/chat/presentation/screens/call_screen.dart';
 import '../widgets/main_scaffold.dart';
 
 part 'routes.dart';
@@ -246,6 +248,36 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           key: state.pageKey,
           child: const PaywallScreen(),
         ),
+      ),
+
+      // Other User Profile (pushed on top)
+      GoRoute(
+        path: '/user-profile',
+        name: 'user_profile',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) {
+          final username = state.uri.queryParameters['username'] ?? 'User';
+          final userId = state.uri.queryParameters['userId'];
+          return _buildTransitionPage(
+            key: state.pageKey,
+            child: OtherUserProfileScreen(username: username, userId: userId),
+          );
+        },
+      ),
+
+      // Call Screen
+      GoRoute(
+        path: '/call',
+        name: 'call_screen',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) {
+          final isIncoming = state.uri.queryParameters['isIncoming'] == 'true';
+          final username = state.uri.queryParameters['username'] ?? 'User';
+          return _buildTransitionPage(
+            key: state.pageKey,
+            child: CallScreen(isIncoming: isIncoming, username: username),
+          );
+        },
       ),
     ],
 

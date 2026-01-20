@@ -1,5 +1,7 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../../theme/app_colors.dart';
 import '../../../../widgets/gradient_app_bar.dart';
@@ -29,35 +31,51 @@ class ChatListScreen extends StatelessWidget {
             ),
 
             // Empty state or more chats
-            Padding(
-              padding: const EdgeInsets.all(48.0),
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.chat_bubble_outline,
-                    size: 64,
-                    color: Colors.white.withOpacity(0.2),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No conversations yet',
-                    style: TextStyle(
-                      fontFamily: 'RobotoSlab',
-                      fontSize: 16,
-                      color: Colors.white.withOpacity(0.5),
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.5,
+              child: GestureDetector(
+                onTap: () => context.go('/match'),
+                behavior: HitTestBehavior.opaque,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Transform.translate(
+                      offset: const Offset(0, 40),
+                      child: ImageFiltered(
+                        imageFilter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
+                        child: Lottie.asset(
+                          'assets/animations/send.json',
+                          width: 280,
+                          height: 200,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Start chatting with strangers\nto see your conversations here',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: 'RobotoSlab',
-                      fontSize: 14,
-                      color: Colors.white.withOpacity(0.3),
+                    Text(
+                      'Unblur the Mystery',
+                      style: TextStyle(
+                        fontFamily: 'RobotoSlab',
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 48.0),
+                      child: Text(
+                        'What are you waiting for? Start chatting\nwith strangers now to unblur their\nprofiles and connect instantly!',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: 'RobotoSlab',
+                          fontSize: 14,
+                          color: Colors.white.withOpacity(0.6),
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -80,7 +98,7 @@ class ChatListScreen extends StatelessWidget {
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       leading: CircleAvatar(
         radius: 28,
-        backgroundColor: isTeam ? AppColors.buttonBackground : Colors.grey[800],
+        backgroundColor: isTeam ? Colors.grey : Colors.grey[800],
         child: isTeam
             ? Image.asset(avatar, width: 42, height: 42)
             : const Icon(Icons.person, color: Colors.white54),
