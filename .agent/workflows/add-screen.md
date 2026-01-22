@@ -72,12 +72,31 @@ static const String newScreen = '/new-screen';
 ## 4. Navigate to Screen
 
 ```dart
+
 // Push (can go back)
 context.push('/new-screen');
 
 // Go (replaces current)
 context.go('/new-screen');
 ```
+
+## Navigation Best Practices
+
+When navigating, always check `/lib/routing/app_router.dart` first:
+
+1.  **Named Routes**: Use `context.pushNamed('route_name')` ONLY if the route has a `name` property defined in the `GoRoute`.
+
+    ```dart
+    // In app_router.dart: name: 'user_profile'
+    context.pushNamed('user_profile'); // ✅ Correct
+    ```
+
+2.  **Path Navigation**: If a route does NOT have a name (e.g. `/chat/:id`), you MUST use `context.push('/path/value')`.
+    ```dart
+    // In app_router.dart: No name defined
+    context.pushNamed('chat_detail'); // ❌ CRASH: Route name not found
+    context.push('/chat/123');        // ✅ Correct
+    ```
 
 ## Theme Guidelines
 

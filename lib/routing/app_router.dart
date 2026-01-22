@@ -18,6 +18,7 @@ import '../features/subscription/presentation/screens/paywall_screen.dart';
 import '../features/chat/presentation/screens/chat_detail_screen.dart';
 import '../features/profile/presentation/screens/other_user_profile_screen.dart';
 import '../features/chat/presentation/screens/call_screen.dart';
+import '../features/friends/presentation/screens/friends_screen.dart';
 import '../widgets/main_scaffold.dart';
 
 part 'routes.dart';
@@ -28,6 +29,7 @@ final _matchNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'match');
 final _discoveryNavigatorKey = GlobalKey<NavigatorState>(
   debugLabel: 'discovery',
 );
+final _friendsNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'friends');
 final _chatsNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'chats');
 final _profileNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'profile');
 
@@ -131,6 +133,20 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 pageBuilder: (context, state) => _buildTransitionPage(
                   key: state.pageKey,
                   child: const MatchScreen(),
+                ),
+              ),
+            ],
+          ),
+
+          // Friends Tab
+          StatefulShellBranch(
+            navigatorKey: _friendsNavigatorKey,
+            routes: [
+              GoRoute(
+                path: '/friends',
+                pageBuilder: (context, state) => _buildTransitionPage(
+                  key: state.pageKey,
+                  child: const FriendsScreen(),
                 ),
               ),
             ],

@@ -52,6 +52,7 @@ abstract final class AppColors {
   // Background Colors
   static const Color backgroundLight = Color(0xFFF8F9FA);
   static const Color backgroundDark = Color(0xFF222222);
+  static const Color backgroundDarker = Color(0xFF1C1C1C);
   static const Color surfaceLight = Color(0xFFFFFFFF);
   static const Color splashBackground = Color.fromARGB(255, 224, 192, 117);
   static const Color buttonBackground = Color(0xFFF2F0E9);

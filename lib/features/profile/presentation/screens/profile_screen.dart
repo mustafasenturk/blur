@@ -195,7 +195,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Positioned(
               left: 16,
               right: 16,
-              bottom: MediaQuery.of(context).padding.bottom + 16,
+              bottom: MediaQuery.of(context).padding.bottom + 32,
               child: AnimatedGradientButton(
                 onPressed: () {
                   context.push('/paywall');

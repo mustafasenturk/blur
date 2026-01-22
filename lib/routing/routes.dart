@@ -9,6 +9,7 @@ abstract class AppRoutes {
   // Tab routes
   static const String match = '/match';
   static const String discovery = '/discovery';
+  static const String friends = '/friends';
   static const String chats = '/chats';
   static const String profile = '/profile';
 

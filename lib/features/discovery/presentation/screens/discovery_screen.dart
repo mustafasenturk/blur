@@ -17,20 +17,33 @@ class DiscoveryScreen extends StatelessWidget {
         itemCount: _mockUsers.length,
         itemBuilder: (context, index) {
           final user = _mockUsers[index];
-          return DiscoveryUserCard(
-            userName: user.name,
-            userImageUrl: user.profileImage,
-            biography: user.bio,
-            location: user.location,
-            age: user.age,
-            height: user.height,
-            gender: user.gender,
-            orientation: user.orientation,
-            hasVoiceRecording: user.hasVoice,
-            photos: user.photos,
-            onPlayVoice: () {
-              // TODO: Implement playback
-            },
+          final isLast = index == _mockUsers.length - 1;
+
+          return Column(
+            children: [
+              DiscoveryUserCard(
+                userName: user.name,
+                userImageUrl: user.profileImage,
+                biography: user.bio,
+                location: user.location,
+                age: user.age,
+                height: user.height,
+                gender: user.gender,
+                orientation: user.orientation,
+                hasVoiceRecording: user.hasVoice,
+                photos: user.photos,
+                pleasures: user.pleasures,
+              ),
+              if (!isLast)
+                Center(
+                  child: Image.asset(
+                    'assets/images/seperator.png',
+                    width: double.infinity,
+                    fit: BoxFit.contain,
+                    height: 40, // Adjust height as needed
+                  ),
+                ),
+            ],
           );
         },
       ),
@@ -50,6 +63,7 @@ class _DiscoverMockUser {
   final String orientation;
   final bool hasVoice;
   final List<DiscoverPhoto> photos;
+  final List<String> pleasures;
 
   _DiscoverMockUser({
     required this.name,
@@ -62,108 +76,65 @@ class _DiscoverMockUser {
     required this.orientation,
     required this.hasVoice,
     required this.photos,
+    required this.pleasures,
   });
 }
 
 final List<_DiscoverMockUser> _mockUsers = [
   _DiscoverMockUser(
     name: 'Elif Yılmaz',
-    profileImage:
-        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop',
+    profileImage: 'assets/images/female.png', // Use asset
     bio:
-        'Sanat ve müzik tutkunu. İstanbul\'da yaşıyorum. Seyahat etmeyi ve yeni kültürler keşfetmeyi severim. 🎨✈️',
-    location: 'İstanbul, TR',
+        'Passionate about art and music. Living in Istanbul. I love traveling and discovering new cultures. 🎨✈️',
+    location: 'Istanbul, TR',
     age: '24',
     height: '1.68m',
-    gender: 'Kadın',
-    orientation: 'Heteroseksüel',
+    gender: 'Female',
+    orientation: 'Heterosexual',
     hasVoice: true,
+    pleasures: ['Dirty Talk', 'French Kissing', 'Neck Kisses', 'Eye Contact'],
     photos: [
-      DiscoverPhoto(
-        url:
-            'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=400&auto=format&fit=crop',
-        isPrivate: false,
-      ),
-      DiscoverPhoto(
-        url:
-            'https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=400&auto=format&fit=crop',
-        isPrivate: true,
-      ),
-      DiscoverPhoto(
-        url:
-            'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=400&auto=format&fit=crop',
-        isPrivate: false,
-      ),
-      DiscoverPhoto(
-        url:
-            'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?q=80&w=400&auto=format&fit=crop',
-        isPrivate: true,
-      ),
+      DiscoverPhoto(url: 'assets/images/female.png', isPrivate: false),
+      DiscoverPhoto(url: 'assets/images/female.png', isPrivate: true),
+      DiscoverPhoto(url: 'assets/images/female.png', isPrivate: false),
+      DiscoverPhoto(url: 'assets/images/female.png', isPrivate: true),
     ],
   ),
   _DiscoverMockUser(
     name: 'Can Demir',
-    profileImage:
-        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop',
+    profileImage: 'assets/images/male.png', // Use asset
     bio:
-        'Fotoğrafçılık ve doğa yürüyüşleri hobim. Kahve içmeden güne başlayamam. ☕️📸',
-    location: 'İzmir, TR',
+        'Photography and hiking are my hobbies. I cannot start the day without coffee. ☕️📸',
+    location: 'Izmir, TR',
     age: '27',
     height: '1.82m',
-    gender: 'Erkek',
-    orientation: 'Heteroseksüel',
+    gender: 'Male',
+    orientation: 'Heterosexual',
     hasVoice: false,
+    pleasures: ['Your Scent', 'Heavy Petting', 'Cuddling', 'Oil Massage'],
     photos: [
-      DiscoverPhoto(
-        url:
-            'https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=400&auto=format&fit=crop',
-        isPrivate: false,
-      ),
-      DiscoverPhoto(
-        url:
-            'https://images.unsplash.com/photo-1493246507139-91e8fad9978e?q=80&w=400&auto=format&fit=crop',
-        isPrivate: true,
-      ),
-      DiscoverPhoto(
-        url:
-            'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?q=80&w=400&auto=format&fit=crop',
-        isPrivate: false,
-      ),
+      DiscoverPhoto(url: 'assets/images/male.png', isPrivate: false),
+      DiscoverPhoto(url: 'assets/images/male.png', isPrivate: true),
+      DiscoverPhoto(url: 'assets/images/male.png', isPrivate: false),
     ],
   ),
   _DiscoverMockUser(
     name: 'Zeynep Kaya',
-    profileImage:
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop',
+    profileImage: 'assets/images/female.png',
     bio:
-        'Moda tasarım öğrencisi. Enerjik ve pozitif biriyim. Dans etmeyi çok severim! 💃✨',
+        'Fashion design student. I am energetic and positive. I love dancing very much! 💃✨',
     location: 'Ankara, TR',
     age: '22',
     height: '1.70m',
-    gender: 'Kadın',
-    orientation: 'Biseksüel',
+    gender: 'Female',
+    orientation: 'Bisexual',
     hasVoice: true,
+    pleasures: ['Roleplay', 'Edible Fun', 'Sexting', 'Exhibitionism'],
     photos: [
-      DiscoverPhoto(
-        url:
-            'https://images.unsplash.com/photo-1516726817505-f16325303a5d?q=80&w=400&auto=format&fit=crop',
-        isPrivate: true,
-      ),
-      DiscoverPhoto(
-        url:
-            'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?q=80&w=400&auto=format&fit=crop',
-        isPrivate: false,
-      ),
-      DiscoverPhoto(
-        url:
-            'https://images.unsplash.com/photo-1504703395950-b89145a5425b?q=80&w=400&auto=format&fit=crop',
-        isPrivate: true,
-      ),
-      DiscoverPhoto(
-        url:
-            'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=400&auto=format&fit=crop',
-        isPrivate: false,
-      ),
+      DiscoverPhoto(url: 'assets/images/female.png', isPrivate: true),
+      DiscoverPhoto(url: 'assets/images/female.png', isPrivate: false),
+      DiscoverPhoto(url: 'assets/images/female.png', isPrivate: true),
+      DiscoverPhoto(url: 'assets/images/female.png', isPrivate: false),
     ],
   ),
 ];
