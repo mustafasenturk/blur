@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:math';
 import 'dart:ui';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:blur/theme/app_colors.dart';
@@ -82,31 +84,64 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
         setState(() {
           _isPlaying = false;
           _position = Duration.zero;
+          _stopWaveformAnimation();
         });
       }
     });
   }
 
+  Timer? _waveformTimer;
+  List<double> _waveingHeights = List.generate(12, (index) => 12.0);
+
   @override
   void dispose() {
+    _waveformTimer?.cancel();
     _audioPlayer.dispose();
     super.dispose();
+  }
+
+  void _startWaveformAnimation() {
+    _waveformTimer?.cancel();
+    _waveformTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+      if (mounted) {
+        setState(() {
+          _waveingHeights = List.generate(12, (index) {
+            // Random height between 12 and 32
+            return 12.0 + (Random().nextDouble() * 20.0);
+          });
+        });
+      }
+    });
+  }
+
+  void _stopWaveformAnimation() {
+    _waveformTimer?.cancel();
+    if (mounted) {
+      setState(() {
+        _waveingHeights = List.generate(12, (index) => 12.0);
+      });
+    }
   }
 
   Future<void> _toggleAudio() async {
     if (_isPlaying) {
       await _audioPlayer.pause();
+      _stopWaveformAnimation();
     } else {
-      // For now, playing a dummy sound if no URL is provided, or the provided URL
       if (widget.voiceUrl != null && widget.voiceUrl!.isNotEmpty) {
         try {
-          if (widget.voiceUrl!.startsWith('http')) {
-            await _audioPlayer.play(UrlSource(widget.voiceUrl!));
+          if (_audioPlayer.state == PlayerState.paused) {
+            await _audioPlayer.resume();
           } else {
-            await _audioPlayer.play(
-              AssetSource(widget.voiceUrl!.replaceFirst('assets/', '')),
-            );
+            if (widget.voiceUrl!.startsWith('http')) {
+              await _audioPlayer.play(UrlSource(widget.voiceUrl!));
+            } else {
+              await _audioPlayer.play(
+                AssetSource(widget.voiceUrl!.replaceFirst('assets/', '')),
+              );
+            }
           }
+          _startWaveformAnimation();
         } catch (e) {
           debugPrint('Error playing audio: $e');
         }
@@ -399,8 +434,8 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: List.generate(12, (i) {
-                                  // Animate height if playing? Simple random effect for now or static
-                                  final height = 12.0 + (i % 3) * 6.0;
+                                  // Dynamic height from animation
+                                  final height = _waveingHeights[i];
                                   return Container(
                                     width: 3,
                                     height: height,
@@ -647,13 +682,16 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
   }
 
   void _showActionBottomSheet() {
+    // Capture the valid parent context (DiscoveryUserCard's context)
+    final parentContext = context;
+
     showModalBottomSheet(
-      context: context,
+      context: parentContext,
       backgroundColor: Colors.transparent,
       useRootNavigator: true,
-      builder: (context) => Container(
+      builder: (sheetContext) => Container(
         decoration: const BoxDecoration(
-          color: Color(0xFF1E1E1E),
+          color: AppColors.backgroundDark,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         padding: const EdgeInsets.only(bottom: 20),
@@ -673,10 +711,11 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
                         color: AppColors.primary,
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
+                        fontFamily: 'RobotoSlab',
                       ),
                     ),
                     GestureDetector(
-                      onTap: () => Navigator.pop(context),
+                      onTap: () => Navigator.pop(sheetContext),
                       child: const Icon(
                         Icons.close,
                         color: AppColors.primary,
@@ -693,29 +732,54 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
                 leading: const Icon(Icons.send_rounded, color: Colors.white),
                 title: const Text(
                   'Send Message',
-                  style: TextStyle(color: Colors.white, fontSize: 16),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontFamily: 'RobotoSlab',
+                  ),
                 ),
                 onTap: () {
                   HapticFeedback.lightImpact();
-                  Navigator.pop(context);
-                  context.push('/chat/mock-user-123');
+                  Navigator.pop(sheetContext);
+                  // Use parentContext (which is safe and active)
+                  parentContext.push('/chat/mock-user-123');
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.flag_outlined, color: Colors.white),
                 title: const Text(
                   'Report User',
-                  style: TextStyle(color: Colors.white, fontSize: 16),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontFamily: 'RobotoSlab',
+                  ),
                 ),
                 onTap: () {
                   HapticFeedback.lightImpact();
-                  Navigator.pop(context);
-                  // Implement report logic
-                  showTopToast(
-                    context,
-                    'User reported',
-                    icon: Icons.flag,
-                    backgroundColor: Colors.orange,
+                  Navigator.pop(sheetContext);
+
+                  // Use parentContext for the next sheet
+                  _showReasonSheet(
+                    context: parentContext,
+                    title: 'Reason for Reporting',
+                    reasons: [
+                      'Inappropriate Content',
+                      'Harassment',
+                      'Spam',
+                      'Fake Profile',
+                      'Underage',
+                      'Other',
+                    ],
+                    onReasonSelected: (reason) {
+                      ScaffoldMessenger.of(parentContext).clearSnackBars();
+                      showTopToast(
+                        parentContext,
+                        'Report submitted. Thank you.',
+                        icon: Icons.check_circle,
+                        backgroundColor: Colors.green,
+                      );
+                    },
                   );
                 },
               ),
@@ -723,24 +787,171 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
                 leading: const Icon(Icons.block_outlined, color: Colors.red),
                 title: const Text(
                   'Block User',
-                  style: TextStyle(color: Colors.red, fontSize: 16),
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontSize: 16,
+                    fontFamily: 'RobotoSlab',
+                  ),
                 ),
                 onTap: () {
                   HapticFeedback.lightImpact();
-                  Navigator.pop(context);
-                  // Implement block logic
-                  showTopToast(
-                    context,
-                    'User blocked',
-                    icon: Icons.block,
-                    backgroundColor: Colors.red,
+                  Navigator.pop(sheetContext);
+
+                  // Use parentContext for the next sheet
+                  _showReasonSheet(
+                    context: parentContext,
+                    title: 'Reason for Blocking',
+                    reasons: [
+                      'Not Interested',
+                      'Harassment',
+                      'Spam',
+                      'Inappropriate Behavior',
+                      'Other',
+                    ],
+                    onReasonSelected: (reason) {
+                      _showConfirmationDialog(
+                        context: parentContext,
+                        title: 'Block User',
+                        content:
+                            'Are you sure you want to block this user? You will no longer see them in your discovery feed.',
+                        confirmText: 'Block',
+                        confirmColor: Colors.red,
+                        onConfirm: () {
+                          // Implement block logic
+                          showTopToast(
+                            parentContext,
+                            'User blocked',
+                            icon: Icons.block,
+                            backgroundColor: Colors.red,
+                          );
+                        },
+                      );
+                    },
                   );
                 },
               ),
-              SizedBox(height: MediaQuery.of(context).padding.bottom + 10),
+              SizedBox(height: MediaQuery.of(sheetContext).padding.bottom + 10),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showReasonSheet({
+    required BuildContext context,
+    required String title,
+    required List<String> reasons,
+    required Function(String) onReasonSelected,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      useRootNavigator: true,
+      builder: (sheetContext) => Container(
+        decoration: const BoxDecoration(
+          color: AppColors.backgroundDark,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontFamily: 'RobotoSlab',
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => Navigator.pop(sheetContext),
+                    child: const Icon(Icons.close, color: AppColors.primary),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            ...reasons.map(
+              (reason) => ListTile(
+                title: Text(
+                  reason,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontFamily: 'RobotoSlab',
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(sheetContext); // Close sheet
+                  onReasonSelected(reason);
+                },
+              ),
+            ),
+            SizedBox(height: MediaQuery.of(sheetContext).padding.bottom),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showConfirmationDialog({
+    required BuildContext context,
+    required String title,
+    required String content,
+    required String confirmText,
+    required Color confirmColor,
+    required VoidCallback onConfirm,
+  }) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.backgroundDark,
+        title: Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontFamily: 'RobotoSlab',
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Text(
+          content,
+          style: const TextStyle(
+            color: Colors.white70,
+            fontFamily: 'RobotoSlab',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.white70, fontFamily: 'RobotoSlab'),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              onConfirm();
+            },
+            child: Text(
+              confirmText,
+              style: TextStyle(
+                color: confirmColor,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'RobotoSlab',
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

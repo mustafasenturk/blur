@@ -31,6 +31,7 @@ class DiscoveryScreen extends StatelessWidget {
                 gender: user.gender,
                 orientation: user.orientation,
                 hasVoiceRecording: user.hasVoice,
+                voiceUrl: user.voiceUrl,
                 photos: user.photos,
                 pleasures: user.pleasures,
               ),
@@ -62,6 +63,7 @@ class _DiscoverMockUser {
   final String gender;
   final String orientation;
   final bool hasVoice;
+  final String? voiceUrl;
   final List<DiscoverPhoto> photos;
   final List<String> pleasures;
 
@@ -75,6 +77,7 @@ class _DiscoverMockUser {
     required this.gender,
     required this.orientation,
     required this.hasVoice,
+    this.voiceUrl,
     required this.photos,
     required this.pleasures,
   });
@@ -92,6 +95,7 @@ final List<_DiscoverMockUser> _mockUsers = [
     gender: 'Female',
     orientation: 'Heterosexual',
     hasVoice: true,
+    voiceUrl: 'assets/sounds/ringtone.mp3',
     pleasures: ['Dirty Talk', 'French Kissing', 'Neck Kisses', 'Eye Contact'],
     photos: [
       DiscoverPhoto(url: 'assets/images/female.png', isPrivate: false),
@@ -129,6 +133,7 @@ final List<_DiscoverMockUser> _mockUsers = [
     gender: 'Female',
     orientation: 'Bisexual',
     hasVoice: true,
+    voiceUrl: 'assets/sounds/ringtone.mp3',
     pleasures: ['Roleplay', 'Edible Fun', 'Sexting', 'Exhibitionism'],
     photos: [
       DiscoverPhoto(url: 'assets/images/female.png', isPrivate: true),

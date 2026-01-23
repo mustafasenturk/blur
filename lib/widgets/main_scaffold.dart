@@ -1,20 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
 
+import '../core/providers/user_provider.dart';
 import '../../theme/app_colors.dart';
 
 /// Main scaffold with bottom navigation for the app shell
 /// Uses GoRouter's StatefulShellRoute navigation shell
 /// Implements AnimatedBottomNavigationBar
-class MainScaffold extends StatelessWidget {
+class MainScaffold extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
 
   const MainScaffold({super.key, required this.navigationShell});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userState = ref.watch(userProvider);
+    final isMale = userState.isMale;
+
     // Define the icon assets for each tab
     final iconAssets = [
       (
@@ -22,8 +27,8 @@ class MainScaffold extends StatelessWidget {
         active: 'assets/images/match_active.png',
       ),
       (
-        passive: 'assets/images/profile_passive.png',
-        active: 'assets/images/profile_active.png',
+        passive: 'assets/images/friends_passive.png',
+        active: 'assets/images/friends_active.png',
       ), // Friends
       (
         passive: 'assets/images/search_passive.png',
@@ -34,8 +39,12 @@ class MainScaffold extends StatelessWidget {
         active: 'assets/images/chat_active.png',
       ),
       (
-        passive: 'assets/images/profile_passive.png',
-        active: 'assets/images/profile_active.png',
+        passive: isMale
+            ? 'assets/images/profile_man_passive.png'
+            : 'assets/images/profile_woman_passive.png',
+        active: isMale
+            ? 'assets/images/profile_man_active.png'
+            : 'assets/images/profile_woman_active.png',
       ), // Profile
     ];
 

@@ -3,20 +3,22 @@ import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../../core/providers/user_provider.dart';
 import '../../../../../theme/app_colors.dart';
 
 /// Multi-step registration flow screen with rich animations
-class RegisterFlowScreen extends StatefulWidget {
+class RegisterFlowScreen extends ConsumerStatefulWidget {
   const RegisterFlowScreen({super.key});
 
   @override
-  State<RegisterFlowScreen> createState() => _RegisterFlowScreenState();
+  ConsumerState<RegisterFlowScreen> createState() => _RegisterFlowScreenState();
 }
 
-class _RegisterFlowScreenState extends State<RegisterFlowScreen> {
+class _RegisterFlowScreenState extends ConsumerState<RegisterFlowScreen> {
   final PageController _pageController = PageController();
   int _currentStep = 0;
   bool _initialAnimationComplete = false;
@@ -31,6 +33,8 @@ class _RegisterFlowScreenState extends State<RegisterFlowScreen> {
           _selectedGender = 'Man';
           _initialAnimationComplete = true;
         });
+        // Set default gender in provider
+        ref.read(userProvider.notifier).setGender(true);
       }
     });
   }
@@ -422,6 +426,7 @@ class _RegisterFlowScreenState extends State<RegisterFlowScreen> {
                   _heightCm = 180;
                   _initialAnimationComplete = true;
                 });
+                ref.read(userProvider.notifier).setGender(true);
               },
             ),
           ),
@@ -440,6 +445,7 @@ class _RegisterFlowScreenState extends State<RegisterFlowScreen> {
                   _heightCm = 170;
                   _initialAnimationComplete = true;
                 });
+                ref.read(userProvider.notifier).setGender(false);
               },
             ),
           ),

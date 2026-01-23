@@ -23,7 +23,7 @@ class _PreviewProfileScreenState extends State<PreviewProfileScreen> {
   final bool isMale = true;
   final String _biography =
       "I'm a Gallant Explorer looking for new adventures."; // Mock bio for preview
-  final String? _audioPath = 'mock_audio'; // Mock audio presence
+  final String _audioPath = 'mock_audio'; // Mock audio presence
   bool _isPlaying = false;
   int _playbackSeconds = 0;
   final int _totalDurationSeconds = 15;
@@ -71,7 +71,7 @@ class _PreviewProfileScreenState extends State<PreviewProfileScreen> {
       return;
     }
 
-    await _audioPlayer.play(DeviceFileSource(_audioPath!));
+    await _audioPlayer.play(DeviceFileSource(_audioPath));
     setState(() {
       _isPlaying = true;
       _playbackSeconds = 0;

@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/providers/user_provider.dart';
 import '../../../../theme/app_colors.dart';
 import 'dart:math';
 
 import '../../../../widgets/gradient_app_bar.dart';
 
-class EditProfileScreen extends StatefulWidget {
+class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
 
   @override
-  State<EditProfileScreen> createState() => _EditProfileScreenState();
+  ConsumerState<EditProfileScreen> createState() => _EditProfileScreenState();
 }
 
-class _EditProfileScreenState extends State<EditProfileScreen> {
+class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final TextEditingController _usernameController = TextEditingController();
 
   // Selection States
@@ -263,6 +265,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.initState();
     // Initialize with existing data if available (Mock for now)
     _usernameController.text = "Gallant Explorer";
+    // Sync local state with provider
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final isMale = ref.read(userProvider).isMale;
+      setState(() {
+        _selectedGender = isMale ? 'Male' : 'Female';
+      });
+    });
   }
 
   @override
@@ -427,7 +436,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 title: "My gender",
                 options: _genders,
                 currentValue: _selectedGender,
-                onSelected: (val) => setState(() => _selectedGender = val),
+                onSelected: (val) {
+                  setState(() => _selectedGender = val);
+                  // Update global provider
+                  if (val == 'Male') {
+                    ref.read(userProvider.notifier).setGender(true);
+                  } else if (val == 'Female') {
+                    ref.read(userProvider.notifier).setGender(false);
+                  }
+                },
               ),
             ),
 

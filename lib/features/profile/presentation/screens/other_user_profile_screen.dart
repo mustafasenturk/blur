@@ -33,7 +33,7 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
   final bool isMale = true; // Could be passed in or fetched
   final String _biography =
       "I'm a Gallant Explorer looking for new adventures. I love hiking, photography, and good coffee.";
-  final String? _audioPath = 'mock_audio';
+  final String _audioPath = 'mock_audio';
   bool _isPlaying = false;
   int _playbackSeconds = 0;
   final int _totalDurationSeconds = 15;
@@ -81,7 +81,7 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
       return;
     }
 
-    await _audioPlayer.play(DeviceFileSource(_audioPath!));
+    await _audioPlayer.play(DeviceFileSource(_audioPath));
     setState(() {
       _isPlaying = true;
       _playbackSeconds = 0;

@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/providers/user_provider.dart';
 import '../../../../widgets/animated_gradient_button.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../widgets/guilty_pleasure_card.dart';
@@ -15,15 +17,15 @@ import '../../../../data/guilty_pleasures_data.dart';
 import '../widgets/about_me_modal.dart';
 
 /// Profile screen with user info and settings
-class ProfileScreen extends StatefulWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
-  bool isMale = true;
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  // bool isMale = true; // Removed local state
   String _biography = '';
   String? _audioPath;
   bool _isPlaying = false;
@@ -229,6 +231,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildProfileHeader() {
+    final isMale = ref.watch(userProvider).isMale;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Row(
