@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
 
@@ -99,6 +100,9 @@ class MainScaffold extends StatelessWidget {
         rightCornerRadius: 32,
         backgroundColor: AppColors.backgroundDarker,
         onTap: (index) {
+          // Add haptic feedback
+          HapticFeedback.lightImpact();
+
           // Remap tap index to shell branch index
           // 0 -> Match (0)
           // 1 -> Friends (1)

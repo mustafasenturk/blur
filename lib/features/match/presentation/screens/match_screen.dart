@@ -125,10 +125,23 @@ class _MatchScreenState extends State<MatchScreen> {
                 child: ElevatedButton(
                   onPressed: _isMatching
                       ? null
-                      : () {
+                      : () async {
                           setState(() {
                             _isMatching = true;
                           });
+
+                          // Simulate finding a match
+                          await Future.delayed(const Duration(seconds: 2));
+
+                          if (mounted) {
+                            setState(() {
+                              _isMatching = false;
+                            });
+                            // Generate a mock ID and navigate
+                            final mockId = DateTime.now().millisecondsSinceEpoch
+                                .toString();
+                            context.push('/chat/stranger-$mockId');
+                          }
                         },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.buttonBackground,

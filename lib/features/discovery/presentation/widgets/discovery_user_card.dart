@@ -3,7 +3,9 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:blur/theme/app_colors.dart';
 import 'package:blur/widgets/full_screen_image_viewer.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:blur/core/utils/ui_utils.dart';
 
 class DiscoveryUserCard extends StatefulWidget {
   final String userName;
@@ -44,6 +46,7 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
   bool _isPlaying = false;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
+  bool _friendRequestSent = false;
 
   @override
   void initState() {
@@ -132,6 +135,7 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
                   Expanded(
                     child: GestureDetector(
                       onTap: () {
+                        HapticFeedback.lightImpact();
                         context.pushNamed(
                           'user_profile',
                           queryParameters: {
@@ -187,7 +191,10 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.more_vert, color: Colors.white70),
-                    onPressed: _showActionBottomSheet,
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      _showActionBottomSheet();
+                    },
                   ),
                 ],
               ),
@@ -224,16 +231,33 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
               // Add Friend Button
               GestureDetector(
                 onTap: () {
-                  // TODO: Implement add friend logic
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Friend request sent!')),
-                  );
+                  HapticFeedback.lightImpact();
+                  setState(() {
+                    _friendRequestSent = !_friendRequestSent;
+                  });
+
+                  if (_friendRequestSent) {
+                    showTopToast(
+                      context,
+                      'Friend request sent!',
+                      icon: Icons.check_circle_outline,
+                    );
+                  } else {
+                    showTopToast(
+                      context,
+                      'Friend request cancelled',
+                      icon: Icons.remove_circle_outline,
+                      backgroundColor: AppColors.error,
+                    );
+                  }
                 },
                 child: Container(
                   width: 50,
                   height: 50,
                   decoration: BoxDecoration(
-                    color: AppColors.buttonBackground,
+                    color: _friendRequestSent
+                        ? Colors.white.withOpacity(0.2)
+                        : AppColors.buttonBackground,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
@@ -243,9 +267,11 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
                       ),
                     ],
                   ),
-                  child: const Icon(
-                    Icons.person_add_rounded,
-                    color: AppColors.black,
+                  child: Icon(
+                    _friendRequestSent
+                        ? Icons.close_rounded
+                        : Icons.person_add_rounded,
+                    color: _friendRequestSent ? Colors.white : AppColors.black,
                     size: 24,
                   ),
                 ),
@@ -254,6 +280,7 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
               // Message Button
               GestureDetector(
                 onTap: () {
+                  HapticFeedback.lightImpact();
                   context.push('/chat/mock-user-123');
                 },
                 child: Container(
@@ -333,7 +360,10 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
                   if (widget.hasVoiceRecording) ...[
                     const SizedBox(height: 24),
                     GestureDetector(
-                      onTap: _toggleAudio,
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        _toggleAudio();
+                      },
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16,
@@ -399,7 +429,10 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
 
           // Pleasures Button
           GestureDetector(
-            onTap: () => _showPleasuresDialog(context),
+            onTap: () {
+              HapticFeedback.lightImpact();
+              _showPleasuresDialog(context);
+            },
             child: Container(
               height: 56,
               decoration: const BoxDecoration(
@@ -448,6 +481,7 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
   Widget _buildPhotoItem(BuildContext context, DiscoverPhoto photo) {
     return GestureDetector(
       onTap: () {
+        HapticFeedback.lightImpact();
         if (!photo.isPrivate) {
           final imageProvider = photo.url.startsWith('http')
               ? NetworkImage(photo.url)
@@ -662,6 +696,7 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
                   style: TextStyle(color: Colors.white, fontSize: 16),
                 ),
                 onTap: () {
+                  HapticFeedback.lightImpact();
                   Navigator.pop(context);
                   context.push('/chat/mock-user-123');
                 },
@@ -673,10 +708,14 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
                   style: TextStyle(color: Colors.white, fontSize: 16),
                 ),
                 onTap: () {
+                  HapticFeedback.lightImpact();
                   Navigator.pop(context);
                   // Implement report logic
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('User reported')),
+                  showTopToast(
+                    context,
+                    'User reported',
+                    icon: Icons.flag,
+                    backgroundColor: Colors.orange,
                   );
                 },
               ),
@@ -687,11 +726,15 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
                   style: TextStyle(color: Colors.red, fontSize: 16),
                 ),
                 onTap: () {
+                  HapticFeedback.lightImpact();
                   Navigator.pop(context);
                   // Implement block logic
-                  ScaffoldMessenger.of(
+                  showTopToast(
                     context,
-                  ).showSnackBar(const SnackBar(content: Text('User blocked')));
+                    'User blocked',
+                    icon: Icons.block,
+                    backgroundColor: Colors.red,
+                  );
                 },
               ),
               SizedBox(height: MediaQuery.of(context).padding.bottom + 10),

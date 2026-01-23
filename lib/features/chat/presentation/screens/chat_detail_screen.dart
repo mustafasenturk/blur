@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:blur/core/utils/ui_utils.dart';
 
 import '../../../../theme/app_colors.dart';
 import '../../../../widgets/gradient_app_bar.dart';
@@ -33,6 +34,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
   // Audio Recording State
   final AudioRecorder _recorder = AudioRecorder();
   final AudioPlayer _audioPlayer = AudioPlayer();
+  final AudioPlayer _sfxPlayer = AudioPlayer(); // Player for UI sounds
   bool _isRecording = false;
   bool _isPlaying = false;
   int _recordingSeconds = 0;
@@ -86,16 +88,19 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     _focusNode.dispose();
     _recorder.dispose();
     _audioPlayer.dispose();
+    _sfxPlayer.dispose();
     _recordingTimer?.cancel();
     _playbackTimer?.cancel();
     _pulseController.dispose();
     super.dispose();
   }
 
-  void _sendMessage() {
+  Future<void> _sendMessage() async {
     if (_recordedAudioPath == null && _messageController.text.trim().isEmpty) {
       return;
     }
+
+    bool shouldPlaySound = false;
 
     setState(() {
       if (_editingMessage != null) {
@@ -136,8 +141,21 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         }
 
         _messages.add(newMessage);
+        shouldPlaySound = true;
       }
     });
+
+    try {
+      if (shouldPlaySound) {
+        await _sfxPlayer.stop();
+        await _sfxPlayer.play(
+          AssetSource('sounds/message_ping.mp3'),
+          volume: 0.5,
+        );
+      }
+    } catch (e) {
+      debugPrint('Error playing sound: $e');
+    }
 
     _messageController.clear();
     _isComposing = false; // Reset composing state
@@ -157,11 +175,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
   Future<void> _startRecording() async {
     if (!await _recorder.hasPermission()) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Microphone permission is required'),
-            backgroundColor: AppColors.error,
-          ),
+        showTopToast(
+          context,
+          'Microphone permission is required',
+          backgroundColor: AppColors.error,
+          icon: Icons.mic_off,
         );
       }
       return;
@@ -274,7 +292,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       children: [
         // Camera Icon
         GestureDetector(
-          onTap: () => _showSendPhotoSheet(context),
+          onTap: () {
+            HapticFeedback.lightImpact();
+            _showSendPhotoSheet(context);
+          },
           child: Container(
             padding: const EdgeInsets.all(8.0),
             child: const Icon(
@@ -321,7 +342,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         const SizedBox(width: 12),
         // Send / Mic Button
         GestureDetector(
-          onTap: _isComposing ? _sendMessage : _startRecording,
+          onTap: () {
+            HapticFeedback.lightImpact();
+            _isComposing ? _sendMessage() : _startRecording();
+          },
           child: Container(
             width: 48,
             height: 48,
@@ -509,6 +533,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         centerTitle: false,
         titleWidget: GestureDetector(
           onTap: () {
+            HapticFeedback.lightImpact();
             context.pushNamed(
               'user_profile',
               queryParameters: {
@@ -551,7 +576,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
           ),
           IconButton(
             icon: const Icon(Icons.more_vert, color: Colors.white),
-            onPressed: () => _showOptionsSheet(context),
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              _showOptionsSheet(context);
+            },
           ),
         ],
       ),
@@ -990,15 +1018,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
               },
               onCopy: () {
                 Clipboard.setData(ClipboardData(text: message['text']));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Message copied',
-                      style: TextStyle(fontFamily: 'RobotoSlab'),
-                    ),
-                    duration: Duration(seconds: 1),
-                  ),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).clearSnackBars(); // Clear existing if any
+                showTopToast(context, 'Message copied', icon: Icons.copy);
               },
               onDelete: () {
                 setState(() {
@@ -1265,13 +1288,12 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                     'Other',
                   ],
                   onReasonSelected: (reason) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Report submitted. Thank you.',
-                          style: TextStyle(fontFamily: 'RobotoSlab'),
-                        ),
-                      ),
+                    ScaffoldMessenger.of(context).clearSnackBars();
+                    showTopToast(
+                      context,
+                      'Report submitted. Thank you.',
+                      icon: Icons.check_circle,
+                      backgroundColor: Colors.green,
                     );
                   },
                 );
@@ -1307,6 +1329,13 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                       confirmColor: Colors.red,
                       onConfirm: () {
                         // TODO: Implement block logic
+                        // The user requested top toast for blocked user
+                        showTopToast(
+                          context,
+                          'User blocked',
+                          icon: Icons.block,
+                          backgroundColor: Colors.red,
+                        );
                         // Return to chat list
                         context.pop();
                       },

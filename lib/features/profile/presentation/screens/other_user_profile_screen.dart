@@ -3,7 +3,9 @@ import 'dart:ui';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:blur/core/utils/ui_utils.dart';
 import 'package:blur/theme/app_colors.dart';
+import 'package:flutter/services.dart';
 import 'package:blur/widgets/guilty_pleasure_card.dart';
 import 'package:blur/widgets/dashed_border_painter.dart';
 import 'package:blur/widgets/gradient_app_bar.dart';
@@ -31,7 +33,7 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
   final bool isMale = true; // Could be passed in or fetched
   final String _biography =
       "I'm a Gallant Explorer looking for new adventures. I love hiking, photography, and good coffee.";
-  String? _audioPath = 'mock_audio';
+  final String? _audioPath = 'mock_audio';
   bool _isPlaying = false;
   int _playbackSeconds = 0;
   final int _totalDurationSeconds = 15;
@@ -124,6 +126,7 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
             IconButton(
               icon: const Icon(Icons.call, color: Colors.white),
               onPressed: () {
+                HapticFeedback.lightImpact();
                 context.pushNamed(
                   'call_screen',
                   queryParameters: {
@@ -135,7 +138,10 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
             ),
             IconButton(
               icon: const Icon(Icons.more_vert, color: Colors.white),
-              onPressed: () => _showOptionsSheet(context),
+              onPressed: () {
+                HapticFeedback.lightImpact();
+                _showOptionsSheet(context);
+              },
             ),
           ],
         ),
@@ -258,7 +264,10 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
     required VoidCallback onTap,
   }) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
       child: Container(
         height: 56,
         decoration: BoxDecoration(
@@ -291,6 +300,7 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
           // Avatar
           GestureDetector(
             onTap: () {
+              HapticFeedback.lightImpact();
               FullScreenImageViewer.show(
                 context,
                 imageProvider: AssetImage(
@@ -426,6 +436,7 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
                         children: [
                           GestureDetector(
                             onTap: () {
+                              HapticFeedback.lightImpact();
                               if (_isPlaying) {
                                 _stopPlayback();
                               } else {
@@ -627,12 +638,14 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
                 style: TextStyle(color: Colors.white, fontFamily: 'RobotoSlab'),
               ),
               onTap: () {
+                HapticFeedback.lightImpact();
                 Navigator.pop(context);
                 // Trigger report flow
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Report flow not implemented yet"),
-                  ),
+                showTopToast(
+                  context,
+                  'User reported',
+                  icon: Icons.flag,
+                  backgroundColor: Colors.orange,
                 );
               },
             ),
@@ -649,12 +662,14 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
                 ),
               ),
               onTap: () {
+                HapticFeedback.lightImpact();
                 Navigator.pop(context);
                 // Trigger block flow
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Block flow not implemented yet"),
-                  ),
+                showTopToast(
+                  context,
+                  'User blocked',
+                  icon: Icons.block,
+                  backgroundColor: Colors.red,
                 );
               },
             ),

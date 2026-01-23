@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../widgets/animated_gradient_button.dart';
@@ -110,11 +111,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
           actions: [
             IconButton(
               icon: const Icon(Icons.edit, color: Colors.white),
-              onPressed: () => context.push('/edit-profile'),
+              onPressed: () {
+                HapticFeedback.lightImpact();
+                context.push('/edit-profile');
+              },
             ),
             IconButton(
               icon: const Icon(Icons.settings, color: Colors.white),
-              onPressed: () => context.push('/settings'),
+              onPressed: () {
+                HapticFeedback.lightImpact();
+                context.push('/settings');
+              },
             ),
           ],
         ),
@@ -198,6 +205,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               bottom: MediaQuery.of(context).padding.bottom + 32,
               child: AnimatedGradientButton(
                 onPressed: () {
+                  HapticFeedback.lightImpact();
                   context.push('/paywall');
                 },
                 borderRadius: BorderRadius.circular(4),
@@ -233,6 +241,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               GestureDetector(
                 onTap: () {
+                  HapticFeedback.lightImpact();
                   FullScreenImageViewer.show(
                     context,
                     imageProvider: AssetImage(
@@ -267,6 +276,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 bottom: 0,
                 child: GestureDetector(
                   onTap: () {
+                    HapticFeedback.lightImpact();
                     context.push('/preview-profile');
                   },
                   child: Container(
@@ -410,6 +420,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         children: [
                           GestureDetector(
                             onTap: () {
+                              HapticFeedback.lightImpact();
                               if (hasAudio) {
                                 if (_isPlaying) {
                                   _stopPlayback();
@@ -610,7 +621,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildAddPhotoButton() {
     return GestureDetector(
-      onTap: _showAddPhotoBottomSheet,
+      onTap: () {
+        HapticFeedback.lightImpact();
+        _showAddPhotoBottomSheet();
+      },
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.05),
@@ -664,6 +678,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 style: TextStyle(color: Colors.white, fontFamily: 'RobotoSlab'),
               ),
               onTap: () {
+                HapticFeedback.lightImpact();
                 Navigator.pop(context);
                 // TODO: Implement Camera Pick
               },
@@ -675,6 +690,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 style: TextStyle(color: Colors.white, fontFamily: 'RobotoSlab'),
               ),
               onTap: () {
+                HapticFeedback.lightImpact();
                 Navigator.pop(context);
                 // TODO: Implement Gallery Pick
               },

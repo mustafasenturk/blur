@@ -62,7 +62,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             fontWeight: FontWeight.w500,
           ),
         ),
-        activeColor: AppColors.primary,
+        activeThumbColor: AppColors.primary,
         inactiveThumbColor: Colors.white,
         inactiveTrackColor: AppColors.backgroundDark,
         trackOutlineColor: WidgetStateProperty.all(Colors.transparent),

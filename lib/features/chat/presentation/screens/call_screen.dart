@@ -1,6 +1,8 @@
 import 'dart:ui';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:blur/theme/app_colors.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 class CallScreen extends StatefulWidget {
@@ -23,6 +25,7 @@ class _CallScreenState extends State<CallScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _dotController;
   int _dotCount = 0;
+  final AudioPlayer _ringtonePlayer = AudioPlayer();
 
   @override
   void initState() {
@@ -40,12 +43,31 @@ class _CallScreenState extends State<CallScreen>
         });
       }
     });
+
+    // Play ringtone if incoming or calling (assuming we play sound for both for now, or just incoming)
+    // The user said "call sayfasina gecince" (when switching to call page)
+    _playRingtone();
   }
 
   @override
   void dispose() {
+    _ringtonePlayer.dispose();
     _dotController.dispose();
     super.dispose();
+  }
+
+  Future<void> _playRingtone() async {
+    // Loop the ringtone
+    try {
+      await _ringtonePlayer.stop();
+      await _ringtonePlayer.setReleaseMode(ReleaseMode.loop);
+      await _ringtonePlayer.play(
+        AssetSource('sounds/ringtone.mp3'),
+        volume: 0.5,
+      );
+    } catch (e) {
+      debugPrint('Error playing ringtone: $e');
+    }
   }
 
   @override
@@ -173,7 +195,10 @@ class _CallScreenState extends State<CallScreen>
       mainAxisSize: MainAxisSize.min,
       children: [
         GestureDetector(
-          onTap: onTap,
+          onTap: () {
+            HapticFeedback.lightImpact();
+            onTap();
+          },
           child: Container(
             width: 72,
             height: 72,
