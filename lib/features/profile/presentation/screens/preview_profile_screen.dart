@@ -48,9 +48,6 @@ class _PreviewProfileScreenState extends State<PreviewProfileScreen> {
   }
 
   Future<void> _playRecording() async {
-    if (_audioPath == null) return;
-
-    // Simulate playback for mock audio
     if (_audioPath == 'mock_audio') {
       setState(() {
         _isPlaying = true;

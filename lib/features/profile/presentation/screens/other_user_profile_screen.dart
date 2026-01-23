@@ -58,9 +58,6 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
   }
 
   Future<void> _playRecording() async {
-    if (_audioPath == null) return;
-
-    // Simulate playback for mock audio
     if (_audioPath == 'mock_audio') {
       setState(() {
         _isPlaying = true;
