@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:blur/theme/app_colors.dart';
+import 'package:go_router/go_router.dart';
+import 'package:blur/widgets/animated_gradient_button.dart';
 
 void showTopToast(
   BuildContext context,
@@ -71,4 +73,104 @@ void showTopToast(
       overlayEntry.remove();
     }
   });
+}
+
+void showPremiumRequiredDialog(
+  BuildContext context, {
+  required bool isMale,
+  String? message,
+}) {
+  final imagePath = isMale
+      ? 'assets/images/premium_needed_man.png'
+      : 'assets/images/premium_needed_woman.png';
+
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: AppColors.backgroundDark,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Colors.white10),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Close Button
+              Align(
+                alignment: Alignment.centerRight,
+                child: GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: const Icon(Icons.close, color: Colors.white54),
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // Premium Image
+              Container(
+                constraints: const BoxConstraints(maxHeight: 200),
+                child: Image.asset(imagePath, fit: BoxFit.contain),
+              ),
+              const SizedBox(height: 24),
+
+              // Title
+              const Text(
+                'Premium Required',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'RobotoSlab',
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Description
+              Text(
+                message ??
+                    'You need to be a premium member to perform this action. Upgrade now to unlock all features.',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontFamily: 'RobotoSlab',
+                  fontSize: 14,
+                  color: Colors.white70,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 32),
+
+              // Unblur/Upgrade Button (Reusing styling but generic text if needed, or 'UNBLUR')
+              // The user liked the "gorselli ve butonlu" style.
+              // I will not import AnimatedGradientButton here to avoid circular dep if it's not simple,
+              // but I should try to match the look. The user requested "FriendsScreen" style exactly.
+              // So I should import AnimatedGradientButton.
+              AnimatedGradientButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  context.push('/paywall');
+                },
+                borderRadius: BorderRadius.circular(12),
+                height: 56,
+                child: const Text(
+                  'UNBLUR',
+                  style: TextStyle(
+                    fontFamily: 'RobotoSlab',
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
 }

@@ -1,16 +1,18 @@
+import 'package:blur/core/providers/navigation_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../theme/app_colors.dart';
 
 /// Main scaffold with bottom navigation for the app shell
-class MainScaffold extends StatelessWidget {
+class MainScaffold extends ConsumerWidget {
   const MainScaffold({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: Container(
@@ -36,6 +38,8 @@ class MainScaffold extends StatelessWidget {
                   icon: Icons.explore_outlined,
                   activeIcon: Icons.explore,
                   label: 'Match',
+                  onTap: () => _onItemTapped(context, ref, 0),
+                  isSelected: navigationShell.currentIndex == 0,
                 ),
                 _buildNavItem(
                   context,
@@ -43,6 +47,8 @@ class MainScaffold extends StatelessWidget {
                   icon: Icons.chat_bubble_outline,
                   activeIcon: Icons.chat_bubble,
                   label: 'Chats',
+                  onTap: () => _onItemTapped(context, ref, 1),
+                  isSelected: navigationShell.currentIndex == 1,
                 ),
                 _buildNavItem(
                   context,
@@ -50,6 +56,8 @@ class MainScaffold extends StatelessWidget {
                   icon: Icons.person_outline,
                   activeIcon: Icons.person,
                   label: 'Profile',
+                  onTap: () => _onItemTapped(context, ref, 2),
+                  isSelected: navigationShell.currentIndex == 2,
                 ),
               ],
             ),
@@ -65,12 +73,12 @@ class MainScaffold extends StatelessWidget {
     required IconData icon,
     required IconData activeIcon,
     required String label,
+    required VoidCallback onTap,
+    required bool isSelected,
   }) {
-    final isSelected = navigationShell.currentIndex == index;
-
     return Expanded(
       child: InkWell(
-        onTap: () => _onItemTapped(index),
+        onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
@@ -99,7 +107,10 @@ class MainScaffold extends StatelessWidget {
     );
   }
 
-  void _onItemTapped(int index) {
+  void _onItemTapped(BuildContext context, WidgetRef ref, int index) {
+    if (index != navigationShell.currentIndex) {
+      ref.read(currentTabProvider.notifier).state = index;
+    }
     navigationShell.goBranch(
       index,
       initialLocation: index == navigationShell.currentIndex,

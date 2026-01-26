@@ -19,6 +19,7 @@ import '../features/chat/presentation/screens/chat_detail_screen.dart';
 import '../features/profile/presentation/screens/other_user_profile_screen.dart';
 import '../features/chat/presentation/screens/call_screen.dart';
 import '../features/friends/presentation/screens/friends_screen.dart';
+import '../features/match/presentation/screens/profile_visitors_screen.dart';
 import '../widgets/main_scaffold.dart';
 
 part 'routes.dart';
@@ -134,6 +135,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                   key: state.pageKey,
                   child: const MatchScreen(),
                 ),
+                routes: [
+                  GoRoute(
+                    path: 'profile-visitors',
+                    parentNavigatorKey: _rootNavigatorKey, // Hide bottom bar
+                    pageBuilder: (context, state) => _buildTransitionPage(
+                      key: state.pageKey,
+                      child: const ProfileVisitorsScreen(),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -289,9 +300,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) {
           final isIncoming = state.uri.queryParameters['isIncoming'] == 'true';
           final username = state.uri.queryParameters['username'] ?? 'User';
+          final isVideo = state.uri.queryParameters['isVideo'] == 'true';
           return _buildTransitionPage(
             key: state.pageKey,
-            child: CallScreen(isIncoming: isIncoming, username: username),
+            child: CallScreen(
+              isIncoming: isIncoming,
+              username: username,
+              isVideo: isVideo,
+            ),
           );
         },
       ),

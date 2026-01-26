@@ -23,16 +23,16 @@ class MainScaffold extends ConsumerWidget {
     // Define the icon assets for each tab
     final iconAssets = [
       (
-        passive: 'assets/images/match_passive.png',
-        active: 'assets/images/match_active.png',
+        passive: 'assets/images/search_passive.png',
+        active: 'assets/images/search_active.png',
       ),
       (
         passive: 'assets/images/friends_passive.png',
         active: 'assets/images/friends_active.png',
       ), // Friends
       (
-        passive: 'assets/images/search_passive.png',
-        active: 'assets/images/search_active.png',
+        passive: 'assets/images/match_passive.png',
+        active: 'assets/images/match_active.png',
       ),
       (
         passive: 'assets/images/chat_passive.png',
@@ -52,19 +52,36 @@ class MainScaffold extends ConsumerWidget {
       extendBody: true, // Allow body to extend behind the navigation bar
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: navigationShell,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Navigate to Discovery (search) which is the middle item in logic
-          // But based on the requested order: Match, Friends, Search, Chat, Profile
-          navigationShell.goBranch(2, initialLocation: true);
-        },
-        backgroundColor: AppColors.primary,
-        shape: const CircleBorder(),
-        child: Image.asset(
-          iconAssets[2].active, // Search icon
-          height: 32,
-          fit: BoxFit.contain,
-          // color: Colors.black, // Dark icon on bright button
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withOpacity(0.5),
+              blurRadius: 2,
+              spreadRadius: 0,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        ),
+        child: FloatingActionButton(
+          onPressed: () {
+            // Navigate to Discovery (search) which is the middle item in logic
+            // But based on the requested order: Match, Friends, Search, Chat, Profile
+            navigationShell.goBranch(2, initialLocation: true);
+          },
+          backgroundColor: AppColors.backgroundDarker,
+          elevation: 0,
+          highlightElevation: 0,
+          shape: const CircleBorder(),
+          child: Image.asset(
+            navigationShell.currentIndex == 2
+                ? iconAssets[2].active
+                : iconAssets[2].passive,
+            height: 22,
+            fit: BoxFit.contain,
+            // color: Colors.black, // Dark icon on bright button
+          ),
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,

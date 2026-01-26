@@ -4,7 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lottie/lottie.dart';
+
 import 'package:go_router/go_router.dart';
 
 import '../../../../../core/providers/user_provider.dart';
@@ -757,40 +757,38 @@ class _RegisterFlowScreenState extends ConsumerState<RegisterFlowScreen> {
           ),
         ),
         Expanded(
-          child: GridView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 0.85,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+            child: Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              alignment: WrapAlignment.center,
+              children: List.generate(_guiltyPleasures.length, (index) {
+                final item = _guiltyPleasures[index];
+                return _GuiltyPleasureCard(
+                  title: item['title']!,
+                  description: item['description']!,
+                  imagePath: item['image']!, // Ignored
+                  showLottie: false,
+                  onSelected: (isSelected) {
+                    setState(() {
+                      if (isSelected) {
+                        _selectedInterestsIndices.add(index);
+                      } else {
+                        _selectedInterestsIndices.remove(index);
+                      }
+                    });
+                  },
+                );
+              }),
             ),
-            itemCount: _guiltyPleasures.length,
-            itemBuilder: (context, index) {
-              final item = _guiltyPleasures[index];
-              return _GuiltyPleasureCard(
-                title: item['title']!,
-                description: item['description']!,
-                imagePath: item['image']!,
-                showLottie: index == 0,
-                onSelected: (isSelected) {
-                  setState(() {
-                    if (isSelected) {
-                      _selectedInterestsIndices.add(index);
-                    } else {
-                      _selectedInterestsIndices.remove(index);
-                    }
-                  });
-                },
-              );
-            },
           ),
         ),
-        const SizedBox(height: 0),
       ],
     );
   }
 
+  // ... (Next Button remains same) ...
   // ==================== NEXT BUTTON ====================
   Widget _buildNextButton() {
     bool isEnabled = false;
@@ -874,7 +872,7 @@ class _GenderOption extends StatelessWidget {
 // ==================== GUILTY PLEASURE CARD WIDGET ====================
 class _GuiltyPleasureCard extends StatefulWidget {
   final String title;
-  final String description;
+  final String description; // Kept for compatibility but unused in visual
   final String imagePath;
   final bool showLottie;
   final ValueChanged<bool> onSelected;
@@ -882,10 +880,13 @@ class _GuiltyPleasureCard extends StatefulWidget {
   const _GuiltyPleasureCard({
     required this.title,
     required this.description,
-    required this.imagePath,
+    required this.imagePath, // Keeping parameter to avoid breaking call site, but ignoring it
     this.showLottie = false,
     required this.onSelected,
   });
+
+  // Helper constructor to ignore imagePath if needed, or we just keep the parameter unused.
+  // final String imagePath; // redundant field since it's in the constructor args above implicitly if we use 'this.imagePath'
 
   @override
   State<_GuiltyPleasureCard> createState() => _GuiltyPleasureCardState();
@@ -893,44 +894,14 @@ class _GuiltyPleasureCard extends StatefulWidget {
 
 class _GuiltyPleasureCardState extends State<_GuiltyPleasureCard>
     with AutomaticKeepAliveClientMixin {
-  double _blurSigma = 20.0;
-  bool _showLottie = false;
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.showLottie) {
-      _showLottie = true;
-      Future.delayed(const Duration(seconds: 3), () {
-        if (mounted) setState(() => _showLottie = false);
-      });
-    }
-  }
+  bool _isSelected = false;
 
   void _handleTap() {
     setState(() {
-      if (_blurSigma == 0.0) {
-        _blurSigma = 20.0;
-        widget.onSelected(false);
-        HapticFeedback.selectionClick();
-      } else {
-        _blurSigma = (_blurSigma - 5.0).clamp(0.0, 20.0);
-        if (_blurSigma == 0.0) {
-          widget.onSelected(true);
-          HapticFeedback.heavyImpact();
-        } else {
-          HapticFeedback.selectionClick();
-        }
-      }
+      _isSelected = !_isSelected;
+      widget.onSelected(_isSelected);
+      HapticFeedback.selectionClick();
     });
-  }
-
-  void _clearBlur() {
-    setState(() {
-      _blurSigma = 0.0;
-      widget.onSelected(true);
-    });
-    HapticFeedback.heavyImpact();
   }
 
   @override
@@ -941,121 +912,27 @@ class _GuiltyPleasureCardState extends State<_GuiltyPleasureCard>
     super.build(context);
     return GestureDetector(
       onTap: _handleTap,
-      onLongPress: _clearBlur,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.buttonBackground, width: 1),
+          color: _isSelected
+              ? AppColors.primary
+              : Colors.white.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(30), // Bubble shape
+          border: Border.all(
+            color: _isSelected ? AppColors.primary : Colors.white24,
+            width: 1,
+          ),
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              TweenAnimationBuilder<double>(
-                tween: Tween<double>(begin: 20.0, end: _blurSigma),
-                duration: const Duration(milliseconds: 300),
-                builder: (context, sigma, child) {
-                  return ImageFiltered(
-                    imageFilter: ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(
-                            bottom: 80.0,
-                            top: 8.0,
-                            left: 16.0,
-                            right: 16.0,
-                          ),
-                          child: Image.asset(
-                            widget.imagePath,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                        Positioned(
-                          bottom: 0,
-                          left: 0,
-                          right: 0,
-                          child: Container(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    if (_blurSigma == 0)
-                                      const Opacity(
-                                        opacity: 0.0,
-                                        child: Icon(
-                                          CupertinoIcons.checkmark_alt,
-                                          size: 20,
-                                        ),
-                                      ),
-                                    if (_blurSigma == 0)
-                                      const SizedBox(width: 4),
-                                    Flexible(
-                                      child: Text(
-                                        widget.title,
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(
-                                          fontFamily: 'RobotoSlab',
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 18,
-                                          color: AppColors.primary,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    if (_blurSigma == 0) ...[
-                                      const SizedBox(width: 4),
-                                      const Icon(
-                                        CupertinoIcons.checkmark_alt,
-                                        color: AppColors.primary,
-                                        size: 20,
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  widget.description,
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                    fontFamily: 'RobotoSlab',
-                                    fontSize: 14,
-                                    color: AppColors.secondary,
-                                    height: 1.2,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-              if (_showLottie)
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: Transform.scale(
-                      scale: 1.5,
-                      child: Lottie.asset(
-                        'assets/animations/touch.json',
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
+        child: Text(
+          widget.title,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontFamily: 'RobotoSlab',
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            color: _isSelected ? Colors.black87 : Colors.white,
           ),
         ),
       ),

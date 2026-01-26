@@ -14,7 +14,65 @@ class ChatListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: const GradientAppBar(title: 'Chats', showBackButton: false),
+      appBar: GradientAppBar(
+        title: 'Chats',
+        showBackButton: false,
+        actions: [
+          GestureDetector(
+            onTap: () {
+              context.push('/match/profile-visitors');
+            },
+            child: Container(
+              margin: const EdgeInsets.only(right: 16),
+              padding: const EdgeInsets.only(
+                left: 6,
+                right: 12,
+                top: 6,
+                bottom: 6,
+              ),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF8E1), // Light cream
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(0),
+                    decoration: const BoxDecoration(
+                      color: AppColors.black,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Lottie.asset(
+                      'assets/animations/eye.json',
+                      width: 28,
+                      height: 28,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  const Text(
+                    '0',
+                    style: TextStyle(
+                      fontFamily: 'RobotoSlab',
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
       body: SafeArea(
         top: false,
         child: ListView(

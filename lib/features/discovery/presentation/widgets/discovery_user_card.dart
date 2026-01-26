@@ -3,13 +3,16 @@ import 'dart:math';
 import 'dart:ui';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:blur/theme/app_colors.dart';
-import 'package:blur/widgets/full_screen_image_viewer.dart';
+import 'package:blur/widgets/full_screen_gallery.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:blur/core/utils/ui_utils.dart';
 
-class DiscoveryUserCard extends StatefulWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:blur/core/providers/navigation_provider.dart';
+
+class DiscoveryUserCard extends ConsumerStatefulWidget {
   final String userName;
   final String userImageUrl;
   final String biography;
@@ -40,20 +43,26 @@ class DiscoveryUserCard extends StatefulWidget {
   });
 
   @override
-  State<DiscoveryUserCard> createState() => _DiscoveryUserCardState();
+  ConsumerState<DiscoveryUserCard> createState() => _DiscoveryUserCardState();
 }
 
-class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
+class _DiscoveryUserCardState extends ConsumerState<DiscoveryUserCard> {
   late AudioPlayer _audioPlayer;
   bool _isPlaying = false;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
   bool _friendRequestSent = false;
 
+  Timer? _waveformTimer;
+  List<double> _waveingHeights = List.generate(12, (index) => 12.0);
+
   @override
   void initState() {
     super.initState();
     _audioPlayer = AudioPlayer();
+    _audioPlayer.setReleaseMode(ReleaseMode.stop);
+
+    // Listen removed from here
 
     _audioPlayer.onPlayerStateChanged.listen((state) {
       if (mounted) {
@@ -90,14 +99,23 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
     });
   }
 
-  Timer? _waveformTimer;
-  List<double> _waveingHeights = List.generate(12, (index) => 12.0);
-
   @override
   void dispose() {
     _waveformTimer?.cancel();
+    _audioPlayer.stop();
     _audioPlayer.dispose();
     super.dispose();
+  }
+
+  void _stopAudio() {
+    if (_isPlaying) {
+      _audioPlayer.stop();
+      _stopWaveformAnimation();
+      setState(() {
+        _isPlaying = false;
+        _position = Duration.zero;
+      });
+    }
   }
 
   void _startWaveformAnimation() {
@@ -125,13 +143,14 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
 
   Future<void> _toggleAudio() async {
     if (_isPlaying) {
-      await _audioPlayer.pause();
-      _stopWaveformAnimation();
+      _stopAudio();
     } else {
       if (widget.voiceUrl != null && widget.voiceUrl!.isNotEmpty) {
         try {
           if (_audioPlayer.state == PlayerState.paused) {
             await _audioPlayer.resume();
+            _startWaveformAnimation();
+            setState(() => _isPlaying = true);
           } else {
             if (widget.voiceUrl!.startsWith('http')) {
               await _audioPlayer.play(UrlSource(widget.voiceUrl!));
@@ -140,8 +159,9 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
                 AssetSource(widget.voiceUrl!.replaceFirst('assets/', '')),
               );
             }
+            _startWaveformAnimation();
+            setState(() => _isPlaying = true);
           }
-          _startWaveformAnimation();
         } catch (e) {
           debugPrint('Error playing audio: $e');
         }
@@ -155,6 +175,13 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
   Widget build(BuildContext context) {
     // Total items = Bio Card + Photos
     final totalItems = 1 + widget.photos.length;
+
+    // Listen to tab changes and stop audio if we switch away
+    ref.listen(currentTabProvider, (previous, next) {
+      if (mounted && _isPlaying) {
+        _stopAudio();
+      }
+    });
 
     return Stack(
       children: [
@@ -171,11 +198,11 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
                     child: GestureDetector(
                       onTap: () {
                         HapticFeedback.lightImpact();
+                        _stopAudio();
                         context.pushNamed(
                           'user_profile',
                           queryParameters: {
                             'username': widget.userName,
-                            // In real app, pass actual user ID
                             'userId': 'mock-user-123',
                           },
                         );
@@ -228,6 +255,7 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
                     icon: const Icon(Icons.more_vert, color: Colors.white70),
                     onPressed: () {
                       HapticFeedback.lightImpact();
+                      _stopAudio();
                       _showActionBottomSheet();
                     },
                   ),
@@ -316,6 +344,7 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
               GestureDetector(
                 onTap: () {
                   HapticFeedback.lightImpact();
+                  _stopAudio();
                   context.push('/chat/mock-user-123');
                 },
                 child: Container(
@@ -346,7 +375,6 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
     );
   }
 
-  // FIRST KART: Bio, Voice, Pleasures
   Widget _buildBioAndPleasuresCard(BuildContext context) {
     return Container(
       width: 300,
@@ -366,98 +394,114 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
         children: [
           // Bio Section
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.format_quote_rounded,
-                    color: Colors.white.withOpacity(0.1),
-                    size: 32,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    widget.biography,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Color(0xFFE0E0E0),
-                      fontSize: 16,
-                      height: 1.5,
-                      fontStyle: FontStyle.italic,
-                    ),
-                    maxLines: 6,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-
-                  // Voice Player (Only if hasVoiceRecording is true)
-                  // If hasVoiceRecording is false, show nothing here as requested.
-                  if (widget.hasVoiceRecording) ...[
-                    const SizedBox(height: 24),
-                    GestureDetector(
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        _toggleAudio();
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _isPlaying
-                              ? AppColors.primary.withOpacity(0.2)
-                              : Colors.white.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(30),
-                          border: _isPlaying
-                              ? Border.all(
-                                  color: AppColors.primary.withOpacity(0.5),
-                                )
-                              : null,
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              _isPlaying
-                                  ? Icons.pause_rounded
-                                  : Icons.play_arrow_rounded,
-                              color: _isPlaying
-                                  ? AppColors.primary
-                                  : Colors.white,
-                              size: 28,
-                            ),
-                            const SizedBox(width: 8),
-                            // Waveform Visual
-                            SizedBox(
-                              height: 24,
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: List.generate(12, (i) {
-                                  // Dynamic height from animation
-                                  final height = _waveingHeights[i];
-                                  return Container(
-                                    width: 3,
-                                    height: height,
-                                    margin: const EdgeInsets.symmetric(
-                                      horizontal: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: _isPlaying
-                                          ? AppColors.primary
-                                          : Colors.white70,
-                                      borderRadius: BorderRadius.circular(1.5),
-                                    ),
-                                  );
-                                }),
-                              ),
-                            ),
-                          ],
-                        ),
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                HapticFeedback.lightImpact();
+                _stopAudio();
+                context.pushNamed(
+                  'user_profile',
+                  queryParameters: {
+                    'username': widget.userName,
+                    'userId': 'mock-user-123',
+                  },
+                );
+              },
+              child: SizedBox(
+                width: double.infinity,
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.format_quote_rounded,
+                        color: Colors.white.withOpacity(0.1),
+                        size: 32,
                       ),
-                    ),
-                  ],
-                ],
+                      const SizedBox(height: 8),
+                      Text(
+                        widget.biography,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color(0xFFE0E0E0),
+                          fontSize: 16,
+                          height: 1.5,
+                          fontStyle: FontStyle.italic,
+                        ),
+                        maxLines: 6,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+
+                      if (widget.hasVoiceRecording) ...[
+                        const SizedBox(height: 24),
+                        GestureDetector(
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            _toggleAudio();
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _isPlaying
+                                  ? AppColors.primary.withOpacity(0.2)
+                                  : Colors.white.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(30),
+                              border: _isPlaying
+                                  ? Border.all(
+                                      color: AppColors.primary.withOpacity(0.5),
+                                    )
+                                  : null,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  _isPlaying
+                                      ? Icons.pause_rounded
+                                      : Icons.play_arrow_rounded,
+                                  color: _isPlaying
+                                      ? AppColors.primary
+                                      : Colors.white,
+                                  size: 28,
+                                ),
+                                const SizedBox(width: 8),
+                                SizedBox(
+                                  height: 24,
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: List.generate(12, (i) {
+                                      final height = _waveingHeights[i];
+                                      return Container(
+                                        width: 3,
+                                        height: height,
+                                        margin: const EdgeInsets.symmetric(
+                                          horizontal: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: _isPlaying
+                                              ? AppColors.primary
+                                              : Colors.white70,
+                                          borderRadius: BorderRadius.circular(
+                                            1.5,
+                                          ),
+                                        ),
+                                      );
+                                    }),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
@@ -466,7 +510,14 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
           GestureDetector(
             onTap: () {
               HapticFeedback.lightImpact();
-              _showPleasuresDialog(context);
+              _stopAudio();
+              context.pushNamed(
+                'user_profile',
+                queryParameters: {
+                  'username': widget.userName,
+                  'userId': 'mock-user-123',
+                },
+              );
             },
             child: Container(
               height: 56,
@@ -512,23 +563,32 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
     );
   }
 
-  // OTHER CARDS: Photos
   Widget _buildPhotoItem(BuildContext context, DiscoverPhoto photo) {
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
-        if (!photo.isPrivate) {
-          final imageProvider = photo.url.startsWith('http')
-              ? NetworkImage(photo.url)
-              : AssetImage(photo.url) as ImageProvider;
+        _stopAudio();
 
-          FullScreenImageViewer.show(
-            context,
-            imageProvider: imageProvider,
-            heroTag:
-                photo.url + DateTime.now().toString(), // Helper for uniqueness
-          );
-        }
+        final initialIndex = widget.photos.indexOf(photo);
+
+        final galleryPhotos = widget.photos
+            .map(
+              (p) => {
+                'image': p.url,
+                'isPrivate': p.isPrivate,
+                'heroTag': p.url + DateTime.now().toString(),
+              },
+            )
+            .toList();
+
+        Navigator.of(context, rootNavigator: true).push(
+          MaterialPageRoute(
+            builder: (_) => FullScreenGallery(
+              photos: galleryPhotos,
+              initialIndex: initialIndex,
+            ),
+          ),
+        );
       },
       child: Container(
         width: 280,
@@ -541,11 +601,23 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // Image Logic
             if (photo.isPrivate)
-              ImageFiltered(
-                imageFilter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-                child: _buildImage(photo.url),
+              Stack(
+                fit: StackFit.expand,
+                children: [
+                  ImageFiltered(
+                    imageFilter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                    child: _buildImage(photo.url),
+                  ),
+                  Center(
+                    child: Image.asset(
+                      'assets/images/close_eye.png',
+                      width: 40,
+                      height: 40,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ],
               )
             else
               Hero(
@@ -588,101 +660,7 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
     }
   }
 
-  void _showPleasuresDialog(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      useRootNavigator: true,
-      builder: (context) => Container(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.7,
-        ),
-        decoration: const BoxDecoration(
-          color: AppColors.backgroundDark,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "${widget.userName}'s Pleasures",
-                    style: const TextStyle(
-                      fontFamily: 'RobotoSlab',
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: const Text(
-                      'Done',
-                      style: TextStyle(
-                        fontFamily: 'RobotoSlab',
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Interest Chips
-            Flexible(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.fromLTRB(
-                  0,
-                  0,
-                  0,
-                  MediaQuery.of(context).padding.bottom + 16,
-                ),
-                child: Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  alignment: WrapAlignment.start,
-                  children: widget.pleasures.map((pleasure) {
-                    return Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: AppColors.primary.withOpacity(0.5),
-                        ),
-                      ),
-                      child: Text(
-                        pleasure,
-                        style: const TextStyle(
-                          fontFamily: 'RobotoSlab',
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   void _showActionBottomSheet() {
-    // Capture the valid parent context (DiscoveryUserCard's context)
     final parentContext = context;
 
     showModalBottomSheet(
@@ -699,7 +677,6 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Header
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 20, 16, 10),
                 child: Row(
@@ -741,7 +718,6 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
                 onTap: () {
                   HapticFeedback.lightImpact();
                   Navigator.pop(sheetContext);
-                  // Use parentContext (which is safe and active)
                   parentContext.push('/chat/mock-user-123');
                 },
               ),
@@ -759,7 +735,6 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
                   HapticFeedback.lightImpact();
                   Navigator.pop(sheetContext);
 
-                  // Use parentContext for the next sheet
                   _showReasonSheet(
                     context: parentContext,
                     title: 'Reason for Reporting',
@@ -797,7 +772,6 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
                   HapticFeedback.lightImpact();
                   Navigator.pop(sheetContext);
 
-                  // Use parentContext for the next sheet
                   _showReasonSheet(
                     context: parentContext,
                     title: 'Reason for Blocking',
@@ -817,7 +791,6 @@ class _DiscoveryUserCardState extends State<DiscoveryUserCard> {
                         confirmText: 'Block',
                         confirmColor: Colors.red,
                         onConfirm: () {
-                          // Implement block logic
                           showTopToast(
                             parentContext,
                             'User blocked',

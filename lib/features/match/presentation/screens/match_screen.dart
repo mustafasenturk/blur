@@ -4,6 +4,7 @@ import 'package:lottie/lottie.dart';
 
 import '../../../../theme/app_colors.dart';
 import '../../../../widgets/gradient_app_bar.dart';
+import '../../../../widgets/animated_gradient_button.dart';
 import '../../../auth/presentation/widgets/restore_account_modal.dart';
 import 'package:go_router/go_router.dart';
 
@@ -75,8 +76,8 @@ class _MatchScreenState extends State<MatchScreen> {
         titleWidget: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Image.asset('assets/icons/logo_transparent.png', height: 24),
-            const SizedBox(width: 8),
+            Image.asset('assets/icons/logo_transparent.png', height: 32),
+            const SizedBox(width: 2),
             ImageFiltered(
               imageFilter: ImageFilter.blur(sigmaX: 1.5, sigmaY: 1.5),
               child: const Text(
@@ -100,6 +101,61 @@ class _MatchScreenState extends State<MatchScreen> {
             ),
           ],
         ),
+        actions: [
+          GestureDetector(
+            onTap: () {
+              context.push('/match/profile-visitors');
+            },
+            child: Container(
+              margin: const EdgeInsets.only(right: 16),
+              padding: const EdgeInsets.only(
+                left: 6,
+                right: 12,
+                top: 6,
+                bottom: 6,
+              ),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF8E1), // Light cream
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(0),
+                    decoration: const BoxDecoration(
+                      color: AppColors.black, // Pinkish circle for eye
+                      shape: BoxShape.circle,
+                    ),
+                    child: Lottie.asset(
+                      'assets/animations/eye.json',
+                      width: 28,
+                      height: 28,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  const Text(
+                    '0',
+                    style: TextStyle(
+                      fontFamily: 'RobotoSlab',
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
       body: SafeArea(
         top: false,
@@ -119,68 +175,56 @@ class _MatchScreenState extends State<MatchScreen> {
             // Chat Stranger Button
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: SizedBox(
-                width: double.infinity,
+              child: AnimatedGradientButton(
+                onPressed: () async {
+                  if (_isMatching) return;
+
+                  setState(() {
+                    _isMatching = true;
+                  });
+
+                  // Simulate finding a match
+                  await Future.delayed(const Duration(seconds: 2));
+
+                  if (mounted) {
+                    setState(() {
+                      _isMatching = false;
+                    });
+                    // Generate a mock ID and navigate
+                    final mockId = DateTime.now().millisecondsSinceEpoch
+                        .toString();
+                    context.push('/chat/stranger-$mockId');
+                  }
+                },
+                borderRadius: BorderRadius.circular(4),
                 height: 56,
-                child: ElevatedButton(
-                  onPressed: _isMatching
-                      ? null
-                      : () async {
-                          setState(() {
-                            _isMatching = true;
-                          });
-
-                          // Simulate finding a match
-                          await Future.delayed(const Duration(seconds: 2));
-
-                          if (mounted) {
-                            setState(() {
-                              _isMatching = false;
-                            });
-                            // Generate a mock ID and navigate
-                            final mockId = DateTime.now().millisecondsSinceEpoch
-                                .toString();
-                            context.push('/chat/stranger-$mockId');
-                          }
-                        },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.buttonBackground,
-                    foregroundColor: Colors.black,
-                    disabledBackgroundColor: AppColors.buttonBackground
-                        .withOpacity(0.5),
-                    disabledForegroundColor: Colors.black.withOpacity(0.5),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (_isMatching) ...[
-                        const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.black54,
-                            ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (_isMatching) ...[
+                      const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.black54,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                      ],
-                      const Text(
-                        'Chat Stranger',
-                        style: TextStyle(
-                          fontFamily: 'RobotoSlab',
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
-                        ),
                       ),
+                      const SizedBox(width: 8),
                     ],
-                  ),
+                    const Text(
+                      'Chat Stranger',
+                      style: TextStyle(
+                        fontFamily: 'RobotoSlab',
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

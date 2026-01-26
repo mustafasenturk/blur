@@ -563,13 +563,29 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.call, color: Colors.white),
+            icon: const Icon(Icons.videocam, color: Colors.white),
             onPressed: () {
+              HapticFeedback.lightImpact();
               context.pushNamed(
                 'call_screen',
                 queryParameters: {
                   'username': 'Gallant Explorer',
                   'isIncoming': 'false',
+                  'isVideo': 'true',
+                },
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.call, color: Colors.white),
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              context.pushNamed(
+                'call_screen',
+                queryParameters: {
+                  'username': 'Gallant Explorer',
+                  'isIncoming': 'false',
+                  'isVideo': 'false',
                 },
               );
             },
@@ -1209,19 +1225,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                 // TODO: Implement Gallery Pick
               },
             ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              visualDensity: VisualDensity.compact,
-              leading: const Icon(Icons.lock_outline, color: Colors.white),
-              title: const Text(
-                'Private Photos',
-                style: TextStyle(color: Colors.white, fontFamily: 'RobotoSlab'),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                // TODO: Implement Private Photos Pick
-              },
-            ),
+
             SizedBox(height: MediaQuery.of(context).padding.bottom + 20),
           ],
         ),

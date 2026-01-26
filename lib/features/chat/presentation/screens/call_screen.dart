@@ -9,12 +9,14 @@ class CallScreen extends StatefulWidget {
   final bool isIncoming;
   final String username;
   final String? avatarPath;
+  final bool isVideo;
 
   const CallScreen({
     super.key,
     required this.isIncoming,
     required this.username,
     this.avatarPath,
+    this.isVideo = false,
   });
 
   @override
@@ -44,8 +46,6 @@ class _CallScreenState extends State<CallScreen>
       }
     });
 
-    // Play ringtone if incoming or calling (assuming we play sound for both for now, or just incoming)
-    // The user said "call sayfasina gecince" (when switching to call page)
     _playRingtone();
   }
 
@@ -57,7 +57,6 @@ class _CallScreenState extends State<CallScreen>
   }
 
   Future<void> _playRingtone() async {
-    // Loop the ringtone
     try {
       await _ringtonePlayer.stop();
       await _ringtonePlayer.setReleaseMode(ReleaseMode.loop);
@@ -72,6 +71,14 @@ class _CallScreenState extends State<CallScreen>
 
   @override
   Widget build(BuildContext context) {
+    String statusText;
+    if (widget.isIncoming) {
+      statusText = widget.isVideo ? "Incoming Video Call" : "Incoming Call";
+    } else {
+      statusText = widget.isVideo ? "Video Calling" : "Calling";
+    }
+    statusText += '.' * _dotCount;
+
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
@@ -130,7 +137,7 @@ class _CallScreenState extends State<CallScreen>
 
                 // Status Text
                 Text(
-                  "${widget.isIncoming ? "Incoming Call" : "Calling"}${'.' * _dotCount}",
+                  statusText,
                   style: TextStyle(
                     fontFamily: 'RobotoSlab',
                     fontSize: 16,

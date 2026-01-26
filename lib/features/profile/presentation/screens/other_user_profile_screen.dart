@@ -3,14 +3,16 @@ import 'dart:ui';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:blur/core/providers/user_provider.dart';
 import 'package:blur/core/utils/ui_utils.dart';
 import 'package:blur/theme/app_colors.dart';
 import 'package:flutter/services.dart';
-import 'package:blur/widgets/guilty_pleasure_card.dart';
+
 import 'package:blur/widgets/dashed_border_painter.dart';
 import 'package:blur/widgets/gradient_app_bar.dart';
 import 'package:blur/widgets/full_screen_image_viewer.dart';
-import 'package:blur/data/guilty_pleasures_data.dart';
+import '../../../../widgets/full_screen_gallery.dart';
 import 'package:go_router/go_router.dart';
 
 /// Other User Profile screen - View another user's profile with actions
@@ -112,144 +114,142 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        appBar: GradientAppBar(
-          title: widget.username,
-          showBackButton: true,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.call, color: Colors.white),
-              onPressed: () {
-                HapticFeedback.lightImpact();
-                context.pushNamed(
-                  'call_screen',
-                  queryParameters: {
-                    'username': widget.username,
-                    'isIncoming': 'false',
-                  },
-                );
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.more_vert, color: Colors.white),
-              onPressed: () {
-                HapticFeedback.lightImpact();
-                _showOptionsSheet(context);
-              },
-            ),
-          ],
-        ),
-        body: Stack(
-          children: [
-            NestedScrollView(
-              headerSliverBuilder: (context, innerBoxIsScrolled) => [
-                SliverToBoxAdapter(
-                  child: Column(
-                    children: [
-                      _buildProfileHeader(),
-                      const SizedBox(height: 24),
-                      if (_biography.isNotEmpty || _audioPath != null)
-                        _buildAboutMeSection(),
-                    ],
-                  ),
-                ),
-                SliverPersistentHeader(
-                  pinned: true,
-                  delegate: _TabBarDelegate(
-                    TabBar(
-                      indicator: const UnderlineTabIndicator(
-                        borderSide: BorderSide(
-                          width: 3.0,
-                          color: AppColors.primary,
-                        ),
-                        insets: EdgeInsets.symmetric(horizontal: 16.0),
-                      ),
-                      indicatorSize: TabBarIndicatorSize.tab,
-                      labelColor: Colors.white,
-                      unselectedLabelColor: Colors.white54,
-                      labelStyle: const TextStyle(
-                        fontFamily: 'RobotoSlab',
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      tabs: const [
-                        Tab(
-                          icon: Icon(Icons.grid_view_rounded, size: 24),
-                          text: "PHOTOS",
-                        ),
-                        Tab(
-                          icon: Icon(Icons.lock_clock_outlined, size: 24),
-                          text: "PRIVATE",
-                        ),
-                        Tab(
-                          icon: Icon(Icons.favorite_border_rounded, size: 24),
-                          text: "INTEREST",
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-              body: Padding(
-                padding: const EdgeInsets.only(
-                  bottom: 90,
-                ), // Space for bottom bar
-                child: TabBarView(
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: GradientAppBar(
+        title: widget.username,
+        showBackButton: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.videocam, color: Colors.white),
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              context.pushNamed(
+                'call_screen',
+                queryParameters: {
+                  'username': widget.username,
+                  'isIncoming': 'false',
+                  'isVideo': 'true',
+                },
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.call, color: Colors.white),
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              context.pushNamed(
+                'call_screen',
+                queryParameters: {
+                  'username': widget.username,
+                  'isIncoming': 'false',
+                  'isVideo': 'false', // Explicitly false for audio
+                },
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.more_vert, color: Colors.white),
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              _showOptionsSheet(context);
+            },
+          ),
+        ],
+      ),
+      body: Stack(
+        children: [
+          CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildPhotosTab(),
-                    _buildPrivateTab(),
-                    _buildInterestsTab(),
-                  ],
-                ),
-              ),
-            ),
-
-            // Bottom Action Bar
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: AppColors.backgroundDark,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.backgroundDark,
-                      blurRadius: 40,
-                      offset: Offset(0, -40),
+                    _buildProfileHeader(),
+                    const SizedBox(height: 24),
+                    if (_biography.isNotEmpty || _audioPath != null)
+                      _buildAboutMeSection(),
+                    const SizedBox(height: 24),
+                    // Photos Section
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        "Photos",
+                        style: TextStyle(
+                          fontFamily: 'RobotoSlab',
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
+                    const SizedBox(height: 12),
+                    _buildPhotosList(),
+                    const SizedBox(height: 24),
+                    // Pleasures Section
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        "Pleasures",
+                        style: TextStyle(
+                          fontFamily: 'RobotoSlab',
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildInterestsList(),
+                    const SizedBox(height: 150), // Increased Bottom padding
                   ],
                 ),
-                padding: EdgeInsets.only(
-                  left: 16,
-                  right: 16,
-                  top: 0,
-                  bottom: MediaQuery.of(context).padding.bottom + 16,
-                ),
-                child: _buildActionButton(
-                  label: "MESSAGE",
-                  color: AppColors.primary,
-                  textColor: Colors.black87,
-                  onTap: () {
-                    if (GoRouter.of(context)
-                        .routerDelegate
-                        .currentConfiguration
-                        .uri
-                        .toString()
-                        .contains('/chat/')) {
-                      context.pop();
-                    } else {
-                      context.push('/chat/${widget.userId ?? "1"}');
-                    }
-                  },
-                ),
+              ),
+            ],
+          ),
+
+          // Bottom Action Bar
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              decoration: const BoxDecoration(
+                color: AppColors.backgroundDark,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.backgroundDark,
+                    blurRadius: 40,
+                    offset: Offset(0, -40),
+                  ),
+                ],
+              ),
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 0,
+                bottom: MediaQuery.of(context).padding.bottom + 16,
+              ),
+              child: _buildActionButton(
+                label: "MESSAGE",
+                color: AppColors.primary,
+                textColor: Colors.black87,
+                onTap: () {
+                  if (GoRouter.of(context)
+                      .routerDelegate
+                      .currentConfiguration
+                      .uri
+                      .toString()
+                      .contains('/chat/')) {
+                    context.pop();
+                  } else {
+                    context.push('/chat/${widget.userId ?? "1"}');
+                  }
+                },
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -491,107 +491,146 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
     );
   }
 
-  Widget _buildPhotosTab() {
-    // Mock photos
-    return GridView.builder(
-      padding: const EdgeInsets.all(16),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
+  Widget _buildPhotosList() {
+    // Generate 10 mixed photos: index % 2 == 0 ? Public : Private
+    final photos = List.generate(8, (index) {
+      return {
+        'isPrivate': index % 2 != 0,
+        'image': 'assets/images/male_avatar.png',
+        'heroTag': 'photo_$index',
+      };
+    });
+
+    return SizedBox(
+      height: 300, // Further increased height
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        scrollDirection: Axis.horizontal,
+        itemCount: photos.length,
+        separatorBuilder: (context, index) => const SizedBox(width: 12),
+        itemBuilder: (context, index) {
+          final photo = photos[index];
+          final isPrivate = photo['isPrivate'] as bool;
+          final imagePath = photo['image'] as String;
+          final heroTag = photo['heroTag'] as String;
+
+          return Consumer(
+            builder: (context, ref, _) {
+              return GestureDetector(
+                onTap: () {
+                  HapticFeedback.lightImpact();
+
+                  if (isPrivate) {
+                    final isPremium = ref.read(userProvider).isPremium;
+                    if (!isPremium) {
+                      final isMale = ref.read(userProvider).isMale;
+                      showPremiumRequiredDialog(
+                        context,
+                        isMale: isMale,
+                        message:
+                            "You must be a premium member to view private photos.",
+                      );
+                      return;
+                    }
+                  }
+
+                  // Open full screen gallery
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => FullScreenGallery(
+                        photos: photos,
+                        initialIndex: index,
+                        requirePremium: true,
+                      ),
+                    ),
+                  );
+                },
+                child: Container(
+                  width: 220, // Further increased width
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.white10,
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      if (isPrivate)
+                        ImageFiltered(
+                          imageFilter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                          child: Image.asset(imagePath, fit: BoxFit.cover),
+                        )
+                      else
+                        Hero(
+                          tag: heroTag,
+                          child: Image.asset(imagePath, fit: BoxFit.cover),
+                        ),
+                      if (isPrivate)
+                        Container(
+                          color: Colors.transparent,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.asset(
+                                'assets/images/close_eye.png',
+                                width: 32,
+                                height: 32,
+                                color: AppColors.primary,
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        },
       ),
-      itemCount: 6,
-      itemBuilder: (context, index) {
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-            image: const DecorationImage(
-              image: AssetImage('assets/images/male_avatar.png'), // Placeholder
-              fit: BoxFit.cover,
-            ),
-          ),
-        );
-      },
     );
   }
 
-  Widget _buildPrivateTab() {
-    return GridView.builder(
-      padding: const EdgeInsets.all(16),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-      ),
-      itemCount: 6,
-      itemBuilder: (context, index) {
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            // Blurred Image
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: ImageFiltered(
-                imageFilter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-                child: Image.asset(
-                  'assets/images/male_avatar.png',
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            // Lock Overlay
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Center(
-                child: Icon(
-                  Icons.lock_outline,
-                  color: Colors.white54,
-                  size: 32,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildInterestsTab() {
-    // Mock selected interests
+  Widget _buildInterestsList() {
+    // Mock selected interests titles only
     final selectedTitles = [
       'Dirty Talk',
       'Cuddling',
       'Eye Contact',
       'Roleplay',
+      'Photography',
+      'Hiking',
     ];
-    final selectedInterests = guiltyPleasuresData
-        .where((item) => selectedTitles.contains(item['title']))
-        .toList();
 
-    return GridView.builder(
-      padding: const EdgeInsets.all(16),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 0.85,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Wrap(
+        spacing: 10,
+        runSpacing: 10,
+        children: selectedTitles.map((title) {
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: AppColors.primary.withOpacity(0.5),
+                width: 1,
+              ),
+            ),
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontFamily: 'RobotoSlab',
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
+              ),
+            ),
+          );
+        }).toList(),
       ),
-      itemCount: selectedInterests.length,
-      itemBuilder: (context, index) {
-        final item = selectedInterests[index];
-        return GuiltyPleasureCard(
-          title: item['title']!,
-          description: item['description']!,
-          imagePath: item['image']!,
-          showLottie: false,
-          onSelected: (isSelected) {},
-          startUnblurred: true,
-        );
-      },
     );
   }
 
@@ -676,32 +715,4 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
       ),
     );
   }
-}
-
-class _TabBarDelegate extends SliverPersistentHeaderDelegate {
-  final TabBar tabBar;
-
-  _TabBarDelegate(this.tabBar);
-
-  @override
-  double get minExtent => tabBar.preferredSize.height + 12;
-
-  @override
-  double get maxExtent => tabBar.preferredSize.height + 12;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return Container(
-      color: Theme.of(context).scaffoldBackgroundColor,
-      alignment: Alignment.center,
-      child: tabBar,
-    );
-  }
-
-  @override
-  bool shouldRebuild(_TabBarDelegate oldDelegate) => false;
 }

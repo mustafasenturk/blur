@@ -180,7 +180,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           ),
                           Tab(
                             icon: Icon(Icons.favorite_border_rounded, size: 24),
-                            text: "INTEREST",
+                            text: "PLEASURES",
                           ),
                         ],
                       ),
@@ -200,26 +200,53 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
             ),
 
-            // UNBLUR Button - Fixed at bottom
+            // UNBLUR Button Area
             Positioned(
-              left: 16,
-              right: 16,
-              bottom: MediaQuery.of(context).padding.bottom + 32,
-              child: AnimatedGradientButton(
-                onPressed: () {
-                  HapticFeedback.lightImpact();
-                  context.push('/paywall');
-                },
-                borderRadius: BorderRadius.circular(4),
-                height: 56,
-                child: const Text(
-                  'UNBLUR',
-                  style: TextStyle(
-                    fontFamily: 'RobotoSlab',
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                    letterSpacing: 1.5,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  40, // Increased top padding for gradient fade
+                  16,
+                  MediaQuery.of(context).padding.bottom +
+                      36, // Lifted up significantly
+                ),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Theme.of(context).scaffoldBackgroundColor.withOpacity(
+                        0.0,
+                      ), // Transparent start
+                      Theme.of(
+                        context,
+                      ).scaffoldBackgroundColor, // Solid quickly
+                      Theme.of(
+                        context,
+                      ).scaffoldBackgroundColor, // Solid continue
+                    ],
+                    stops: const [0.0, 0.3, 1.0], // Fade in quickly then solid
+                  ),
+                ),
+                child: AnimatedGradientButton(
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    context.push('/paywall');
+                  },
+                  borderRadius: BorderRadius.circular(4),
+                  height: 56,
+                  child: const Text(
+                    'UNBLUR',
+                    style: TextStyle(
+                      fontFamily: 'RobotoSlab',
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                      letterSpacing: 1.5,
+                    ),
                   ),
                 ),
               ),
@@ -552,17 +579,36 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildPhotosTab() {
-    return GridView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-      ),
-      itemCount: 1,
-      itemBuilder: (context, index) {
-        return _buildAddPhotoButton();
-      },
+    return CustomScrollView(
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          sliver: SliverGrid(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+            ),
+            delegate: SliverChildBuilderDelegate((context, index) {
+              return _buildAddPhotoButton();
+            }, childCount: 1),
+          ),
+        ),
+        const SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(32, 24, 32, 100),
+            child: Text(
+              "Add photos to increase your chances of chatting.",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'RobotoSlab',
+                color: Colors.white54,
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -586,7 +632,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           child: Padding(
             padding: EdgeInsets.fromLTRB(32, 24, 32, 100),
             child: Text(
-              "Only people you approve can see your private photos.",
+              "Only approved users can see your private photos.",
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'RobotoSlab',
@@ -601,25 +647,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildInterestsTab() {
-    return GridView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 0.85,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(16, 24, 16, 100),
+      child: Wrap(
+        spacing: 12,
+        runSpacing: 12,
+        alignment: WrapAlignment.center,
+        children: guiltyPleasuresData.map((item) {
+          // Determine index if needed, or just pass data
+          // For now, simple interaction logic (no real state storage mock)
+          return GuiltyPleasureCard(
+            title: item['title']!,
+            description: item['description']!,
+            imagePath: item['image']!,
+            showLottie: false,
+            onSelected: (isSelected) {},
+          );
+        }).toList(),
       ),
-      itemCount: guiltyPleasuresData.length,
-      itemBuilder: (context, index) {
-        final item = guiltyPleasuresData[index];
-        return GuiltyPleasureCard(
-          title: item['title']!,
-          description: item['description']!,
-          imagePath: item['image']!,
-          showLottie: index == 0,
-          onSelected: (isSelected) {},
-        );
-      },
     );
   }
 
