@@ -189,7 +189,7 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                             _buildSectionTitle('With Photos Only'),
                             Switch(
                               value: _photosOnly,
-                              activeColor: AppColors.primary,
+                              activeThumbColor: AppColors.primary,
                               onChanged: (val) {
                                 setModalState(() => _photosOnly = val);
                               },
