@@ -8,7 +8,7 @@ A privacy-focused Flutter application for anonymous conversations with strangers
 - **Voice Introductions** - Record 30-second audio profiles
 - **Premium Subscriptions** - RevenueCat integration with weekly/monthly/quarterly plans
 - **Modern UI** - Elite dark theme with gold accents
-
+bombom
 ## 🏗️ Architecture
 
 The app follows a **feature-first architecture** with GoRouter's `StatefulShellRoute` for persistent bottom navigation.
