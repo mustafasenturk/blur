@@ -11,7 +11,8 @@
 .svn/
 .swiftpm/
 migrate_working_dir/
-
+# algida boom
+.idea/
 # IntelliJ related
 *.iml
 *.ipr
