@@ -9,7 +9,9 @@ Tabs:
 Overlays:
 ├── /settings
 └── /edit-profile
-```
+```sdsadfsfg
+dfgfdg
+gfdg
 
 ### Folder Structure
 
@@ -20,7 +22,8 @@ lib/
 ├── features/       # Feature modules
 │   ├── auth/
 │   ├── chat/
-│   ├── discovery/
+│   ├── discovery/gfdg
+gdfgdf
 │   ├── match/
 │   ├── profile/
 │   ├── settings/
